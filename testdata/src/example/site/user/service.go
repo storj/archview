@@ -1,4 +1,4 @@
-// want package: "\\Qexample/site/user.Repo[database] = {}, example/site/user.Service[service] = {}, example/site/user.Endpoint[endpoint] = {}\\E"
+// want package: "\\Qexample/site/user.Repo[database] = {}; example/site/user.Service[service] = {users:example/site/user.Repo}; example/site/user.Endpoint[endpoint] = {users:example/site/user.Service}\\E"
 package user
 
 type Repo interface{} // archview: database

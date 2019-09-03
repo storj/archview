@@ -1,8 +1,10 @@
 package archview
 
 import (
+	"fmt"
 	"go/ast"
 	"go/types"
+	"os"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -31,21 +33,21 @@ func (fact *Fact) String() string {
 }
 
 type World struct {
-	Added map[types.Type]*Node
-	List  []*Node
+	ByType map[types.Type]*Node
+	List   []*Node
 }
 
 func NewWorld() *World {
 	return &World{
-		Added: map[types.Type]*Node{},
-		List:  []*Node{},
+		ByType: map[types.Type]*Node{},
+		List:   []*Node{},
 	}
 }
 
 func (world *World) Empty() bool { return len(world.List) == 0 }
 
 func (world *World) Add(n *Node) {
-	world.Added[n.Type] = n
+	world.ByType[n.Type.Underlying()] = n
 	world.List = append(world.List, n)
 }
 
@@ -54,7 +56,7 @@ func (world *World) String() string {
 	for _, node := range world.List {
 		texts = append(texts, node.String())
 	}
-	return strings.Join(texts, ", ")
+	return strings.Join(texts, "; ")
 }
 
 type Node struct {
@@ -83,18 +85,6 @@ type Dep struct {
 func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
-	world := NewWorld()
-
-	for _, fact := range pass.AllPackageFacts() {
-		fact, ok := fact.Fact.(*Fact)
-		if !ok {
-			continue
-		}
-		for _, n := range fact.World.List {
-			world.Add(n)
-		}
-	}
-
 	local := NewWorld()
 
 	inspect.Preorder([]ast.Node{
@@ -113,6 +103,26 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			Class: tag,
 		})
 	})
+
+	world := NewWorld()
+	include := func(local *World) {
+		for _, n := range local.List {
+			world.Add(n)
+		}
+	}
+
+	for _, fact := range pass.AllPackageFacts() {
+		fact, ok := fact.Fact.(*Fact)
+		if !ok {
+			continue
+		}
+		include(fact.World)
+	}
+	include(local)
+
+	for _, node := range local.List {
+		node.Deps = FindDeps(pass, "", world, node, node.Type)
+	}
 
 	if !local.Empty() {
 		pass.ExportPackageFact(&Fact{local})
@@ -134,4 +144,65 @@ func ExtractTypeTag(ts *ast.TypeSpec) (tag string, ok bool) {
 	}
 
 	return "", false
+}
+
+func FindDeps(pass *analysis.Pass, path string, world *World, node *Node, typ types.Type) (deps []*Dep) {
+	switch t := typ.Underlying().(type) {
+	case *types.Interface:
+		for i := 0; i < t.NumMethods(); i++ {
+			method := t.Method(i)
+			switch m := method.Type().(type) {
+			case *types.Signature:
+				result := m.Results()
+				for i := 0; i < result.Len(); i++ {
+					at := result.At(i)
+
+					dep := world.ByType[at.Type().Underlying()]
+					if dep != nil {
+						deps = append(deps, &Dep{
+							Path: strings.TrimPrefix(path+"."+method.Name(), "."),
+							Node: dep,
+						})
+					}
+				}
+			default:
+				fmt.Fprintf(os.Stderr, "unhandled method type %T\n", m)
+			}
+		}
+
+	case *types.Struct:
+		for i := 0; i < t.NumFields(); i++ {
+			field := t.Field(i)
+			underlying := tryDeref(field.Type().Underlying())
+
+			dep := world.ByType[underlying]
+			if dep != nil {
+				deps = append(deps, &Dep{
+					Path: strings.TrimPrefix(path+"."+field.Name(), "."),
+					Node: dep,
+				})
+				continue
+			}
+
+			switch f := underlying.(type) {
+			case *types.Pointer:
+				deps = append(deps, FindDeps(pass, path+"."+field.Name(), world, node, f)...)
+			case *types.Struct:
+				deps = append(deps, FindDeps(pass, path+"."+field.Name(), world, node, f)...)
+			default:
+				fmt.Fprintf(os.Stderr, "unhandled method %q type %T\n", path, f)
+			}
+		}
+
+	default:
+		fmt.Fprintf(os.Stderr, "unhandled type %T\n", t)
+	}
+	return deps
+}
+
+func tryDeref(t types.Type) types.Type {
+	if ptr, ok := t.(*types.Pointer); ok {
+		return ptr.Elem().Underlying()
+	}
+	return t.Underlying()
 }

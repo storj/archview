@@ -1,4 +1,4 @@
-// want package: "\\Qexample/site/comment.Repo[repo] = {}, example/site/comment.Service[service] = {}, example/site/comment.Endpoint[endpoint] = {}\\E"
+// want package: "\\Qexample/site/comment.Repo[repo] = {}; example/site/comment.Service[service] = {comments:example/site/comment.Repo}; example/site/comment.Endpoint[endpoint] = {users:example/site/user.Repo, comments:example/site/comment.Service}\\E"
 package comment
 
 import "example/site/user"
