@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/tools/go/packages"
 
@@ -44,11 +45,23 @@ func main() {
 
 	world := arch.Analyze(pkgs...)
 
-	dot := graph.Dot{
-		World: world,
-
-		GroupByClass: true,
+	var format io.WriterTo
+	switch ext := filepath.Ext(*outname); ext {
+	case ".dot", "":
+		format = &graph.Dot{
+			World:        world,
+			GroupByClass: true,
+		}
+	case ".graphml":
+		format = &graph.GraphML{
+			World: world,
+		}
+	default:
+		log.Fatalf("unknown format %q", ext)
 	}
 
-	_, _ = dot.WriteTo(out)
+	_, err = format.WriteTo(out)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

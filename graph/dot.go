@@ -16,7 +16,7 @@ type Dot struct {
 	NoColor      bool
 }
 
-func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
+func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 	write := func(format string, args ...interface{}) bool {
 		if err != nil {
 			return false
@@ -29,7 +29,7 @@ func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
 
 	write("digraph G {\n")
 
-	if dot.NoColor {
+	if ctx.NoColor {
 		write("\tnode [shape=record target=\"_graphviz\"];\n")
 		write("\tedge [];\n")
 	} else {
@@ -44,9 +44,9 @@ func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
 	write("\n")
 	defer write("}\n")
 
-	if dot.GroupByClass {
+	if ctx.GroupByClass {
 		byClass := map[string][]*arch.Component{}
-		for _, component := range dot.World.Components {
+		for _, component := range ctx.World.Components {
 			byClass[component.Class] = append(byClass[component.Class], component)
 		}
 
@@ -55,35 +55,35 @@ func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
 			write("\t\tlabel=%q;\n\n", class)
 			write("\t\tfontsize=10;\n\n")
 			for _, component := range components {
-				write("\t\t%s %v;\n", dot.id(component),
+				write("\t\t%s %v;\n", ctx.id(component),
 					attrs(
-						dot.label(component),
-						dot.href(component),
-						dot.color(component),
-						dot.nodetooltip(component),
+						ctx.label(component),
+						ctx.href(component),
+						ctx.color(component),
+						ctx.nodetooltip(component),
 					))
 			}
 			write("\t}\n")
 		}
 	} else {
-		for _, component := range dot.World.Components {
-			write("\t%s %v;\n", dot.id(component),
+		for _, component := range ctx.World.Components {
+			write("\t%s %v;\n", ctx.id(component),
 				attrs(
-					dot.label(component),
-					dot.href(component),
-					dot.color(component),
+					ctx.label(component),
+					ctx.href(component),
+					ctx.color(component),
 				))
 		}
 	}
 
 	write("\n")
 
-	for _, source := range dot.World.Components {
+	for _, source := range ctx.World.Components {
 		for _, dep := range source.Deps {
-			write("\t%s -> %s %v;\n", dot.id(source), dot.id(dep.Dep),
+			write("\t%s -> %s %v;\n", ctx.id(source), ctx.id(dep.Dep),
 				attrs(
-					dot.color(dep.Dep),
-					dot.edgetooltip(source, dep),
+					ctx.color(dep.Dep),
+					ctx.edgetooltip(source, dep),
 				))
 		}
 		if len(source.Deps) > 0 {
@@ -106,7 +106,7 @@ func attrs(list ...string) string {
 	return "[" + strings.Join(xs, ",") + "]"
 }
 
-func (dot *Dot) id(component *arch.Component) string {
+func (ctx *Dot) id(component *arch.Component) string {
 	return strings.Map(func(r rune) rune {
 		switch {
 		case 'a' <= r && r <= 'z':
@@ -121,24 +121,24 @@ func (dot *Dot) id(component *arch.Component) string {
 	}, component.Name())
 }
 
-func (dot *Dot) label(component *arch.Component) string {
+func (ctx *Dot) label(component *arch.Component) string {
 	return fmt.Sprintf("label=%q", component.Name())
 }
 
-func (dot *Dot) nodetooltip(component *arch.Component) string {
+func (ctx *Dot) nodetooltip(component *arch.Component) string {
 	return fmt.Sprintf("tooltip=%q", component.Comment)
 }
 
-func (dot *Dot) edgetooltip(source *arch.Component, dep *arch.Dep) string {
+func (ctx *Dot) edgetooltip(source *arch.Component, dep *arch.Dep) string {
 	return fmt.Sprintf("tooltip=%q", dep.Path)
 }
 
-func (dot *Dot) href(component *arch.Component) string {
+func (ctx *Dot) href(component *arch.Component) string {
 	return fmt.Sprintf("href=%q", "http://godoc.org/"+component.PkgPath()+"#"+component.ShortName())
 }
 
-func (dot *Dot) color(component *arch.Component) string {
-	if dot.NoColor {
+func (ctx *Dot) color(component *arch.Component) string {
+	if ctx.NoColor {
 		return ""
 	}
 
