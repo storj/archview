@@ -7,7 +7,8 @@ import (
 	"example/site/user"
 )
 
-type DB struct{} // archview: database
+// archview: database
+type DB struct{}
 
 func New() *DB {
 	return &DB{}

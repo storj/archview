@@ -1,11 +1,46 @@
 package main
 
 import (
-	"golang.org/x/tools/go/analysis/singlechecker"
+	"flag"
+	"fmt"
+	"log"
+	"os"
+
+	"golang.org/x/tools/go/packages"
 
 	"github.com/storj/archview"
 )
 
 func main() {
-	singlechecker.Main(archview.Analyzer)
+	log.SetFlags(0)
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) == 0 {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	pkgs, err := packages.Load(&packages.Config{
+		Mode: NeedAll,
+	}, args...)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	world := archview.Analyze(pkgs...)
+	for _, node := range world.List {
+		fmt.Println(node)
+	}
 }
+
+const NeedAll = packages.NeedName |
+	packages.NeedFiles |
+	packages.NeedCompiledGoFiles |
+	packages.NeedImports |
+	packages.NeedDeps |
+	packages.NeedExportsFile |
+	packages.NeedTypes |
+	packages.NeedSyntax |
+	packages.NeedTypesInfo |
+	packages.NeedTypesSizes

@@ -23,13 +23,13 @@ var Analyzer = &analysis.Analyzer{
 }
 
 type Fact struct {
-	World *World
+	Node *Node
 }
 
 func (*Fact) AFact() {}
 
 func (fact *Fact) String() string {
-	return fact.World.String()
+	return fact.Node.String()
 }
 
 type World struct {
@@ -60,6 +60,7 @@ func (world *World) String() string {
 }
 
 type Node struct {
+	Obj   types.Object
 	Type  types.Type
 	Class string
 	Deps  []*Dep
@@ -98,40 +99,39 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		obj := pass.TypesInfo.Defs[ts.Name]
+
 		local.Add(&Node{
+			Obj:   obj,
 			Type:  obj.Type(),
 			Class: tag,
 		})
 	})
 
 	world := NewWorld()
-	include := func(local *World) {
-		for _, n := range local.List {
-			world.Add(n)
-		}
-	}
 
-	for _, fact := range pass.AllPackageFacts() {
+	for _, fact := range pass.AllObjectFacts() {
 		fact, ok := fact.Fact.(*Fact)
 		if !ok {
 			continue
 		}
-		include(fact.World)
+
+		world.Add(fact.Node)
 	}
-	include(local)
+	for _, n := range local.List {
+		world.Add(n)
+	}
 
 	for _, node := range local.List {
 		node.Deps = FindDeps(pass, "", world, node, node.Type)
-	}
-
-	if !local.Empty() {
-		pass.ExportPackageFact(&Fact{local})
+		pass.ExportObjectFact(node.Obj, &Fact{node})
 	}
 
 	return nil, nil
 }
 
 func ExtractTypeTag(ts *ast.TypeSpec) (tag string, ok bool) {
+	fmt.Printf("%q %#v\n", ts.Name, ts)
+
 	if ts.Comment == nil {
 		return "", false
 	}
