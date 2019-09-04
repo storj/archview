@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"io"
 	"log"
 	"os"
 
@@ -13,7 +14,20 @@ import (
 
 func main() {
 	log.SetFlags(0)
+
+	outname := flag.String("out", "", "output file")
 	flag.Parse()
+
+	var out io.Writer = os.Stdout
+	if *outname != "" {
+		file, err := os.Create(*outname)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		out = file
+	}
 
 	args := flag.Args()
 	if len(args) == 0 {
@@ -22,7 +36,7 @@ func main() {
 	}
 
 	pkgs, err := packages.Load(&packages.Config{
-		Mode: NeedAll,
+		Mode: packages.LoadMode(^0),
 	}, args...)
 	if err != nil {
 		log.Fatal(err)
@@ -36,16 +50,5 @@ func main() {
 		GroupByClass: true,
 	}
 
-	_, _ = dot.WriteTo(os.Stdout)
+	_, _ = dot.WriteTo(out)
 }
-
-const NeedAll = packages.NeedName |
-	packages.NeedFiles |
-	packages.NeedCompiledGoFiles |
-	packages.NeedImports |
-	packages.NeedDeps |
-	packages.NeedExportsFile |
-	packages.NeedTypes |
-	packages.NeedSyntax |
-	packages.NeedTypesInfo |
-	packages.NeedTypesSizes

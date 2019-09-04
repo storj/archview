@@ -6,10 +6,12 @@ import (
 )
 
 type Component struct {
-	Obj   types.Object
-	Type  types.Type
-	Class string
-	Deps  []*Dep
+	Obj  types.Object
+	Type types.Type
+	Deps []*Dep
+
+	Class   string
+	Comment string
 }
 
 type Dep struct {

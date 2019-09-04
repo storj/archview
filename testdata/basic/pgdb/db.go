@@ -5,8 +5,11 @@ import (
 	"example/site/user"
 )
 
-// archview: Database
-type DB struct{}
+// DB implements postgres implementation of the master database.
+//
+// architecture: Database
+type DB struct {
+}
 
 func New() *DB {
 	return &DB{}

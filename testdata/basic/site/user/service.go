@@ -1,11 +1,21 @@
 package user
 
-type Repo interface{} // archview: Database
+// Repoo implements the users repo.
+//
+// architecture: Database
+type Repo interface {
+}
 
+// Service implements the users service.
+//
+// architecture: Service
 type Service struct {
 	users Repo
-} // archview: Service
+}
 
+// Endpoint implements the users endpoint.
+//
+// architecture: Endpoint
 type Endpoint struct {
 	users *Service
-} // archview: Endpoint
+}

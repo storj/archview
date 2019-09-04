@@ -16,21 +16,28 @@ func Analyze(pkgs ...*packages.Package) *World {
 	packages.Visit(pkgs, func(pkg *packages.Package) bool {
 		inspect := inspector.New(pkg.Syntax)
 		inspect.Preorder([]ast.Node{
-			(*ast.TypeSpec)(nil),
+			(*ast.GenDecl)(nil),
 		}, func(n ast.Node) {
-			ts := n.(*ast.TypeSpec)
+			gen := n.(*ast.GenDecl)
+			for _, spec := range gen.Specs {
+				ts, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
 
-			tag, ok := ExtractAnnotation(ts)
-			if !ok {
-				return
+				comment, tag, ok := ExtractAnnotation(gen, ts)
+				if !ok {
+					return
+				}
+
+				obj := pkg.TypesInfo.Defs[ts.Name]
+				world.Add(&Component{
+					Obj:     obj,
+					Type:    obj.Type(),
+					Class:   tag,
+					Comment: comment,
+				})
 			}
-
-			obj := pkg.TypesInfo.Defs[ts.Name]
-			world.Add(&Component{
-				Obj:   obj,
-				Type:  obj.Type(),
-				Class: tag,
-			})
 		})
 		return true
 	}, nil)

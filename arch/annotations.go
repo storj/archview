@@ -1,21 +1,34 @@
 package arch
 
 import (
+	"fmt"
 	"go/ast"
 	"strings"
 )
 
-func ExtractAnnotation(ts *ast.TypeSpec) (tag string, ok bool) {
-	if ts.Comment == nil {
-		return "", false
+func ExtractAnnotation(gen *ast.GenDecl, ts *ast.TypeSpec) (comment, tag string, ok bool) {
+	fmt.Printf("===\n")
+	fmt.Printf("%v\n", gen.Doc.Text())
+
+	fmt.Printf("%v\n", ts.Name)
+	fmt.Printf("%v\n", ts.Doc.Text())
+	fmt.Printf("%v\n", ts.Comment.Text())
+
+	if gen.Doc == nil {
+		return "", "", false
 	}
 
-	for _, c := range ts.Comment.List {
-		if strings.HasPrefix(c.Text, "// archview:") {
-			tag := strings.TrimPrefix(c.Text, "// archview:")
-			return strings.TrimSpace(tag), true
+	for i, c := range gen.Doc.List {
+		if strings.HasPrefix(c.Text, "// architecture:") {
+			tag := strings.TrimPrefix(c.Text, "// architecture:")
+
+			var group ast.CommentGroup
+			group.List = append(group.List, gen.Doc.List[:i]...)
+			group.List = append(group.List, gen.Doc.List[i+1:]...)
+
+			return group.Text(), strings.TrimSpace(tag), true
 		}
 	}
 
-	return "", false
+	return "", "", false
 }

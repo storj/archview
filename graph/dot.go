@@ -60,6 +60,7 @@ func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
 						dot.label(component),
 						dot.href(component),
 						dot.color(component),
+						dot.nodetooltip(component),
 					))
 			}
 			write("\t}\n")
@@ -122,6 +123,10 @@ func (dot *Dot) id(component *arch.Component) string {
 
 func (dot *Dot) label(component *arch.Component) string {
 	return fmt.Sprintf("label=%q", component.Name())
+}
+
+func (dot *Dot) nodetooltip(component *arch.Component) string {
+	return fmt.Sprintf("tooltip=%q", component.Comment)
 }
 
 func (dot *Dot) edgetooltip(source *arch.Component, dep *arch.Dep) string {

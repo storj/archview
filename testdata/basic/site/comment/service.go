@@ -2,13 +2,23 @@ package comment
 
 import "example/site/user"
 
-type Repo interface{} // archview: Database
+// Endpoint implements the comments repository.
+//
+// architecture: Database
+type Repo interface {
+}
 
+// Endpoint implements the comments service.
+//
+// architecture: Service
 type Service struct {
 	comments Repo
-} // archview: Service
+}
 
+// Endpoint implements the comments endpoint.
+//
+// architecture: Endpoint
 type Endpoint struct {
 	users    user.Repo
 	comments *Service
-} // archview: Endpoint
+}
