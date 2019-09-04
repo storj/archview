@@ -2,7 +2,6 @@ package main_test
 
 import (
 	"os/exec"
-	"path/filepath"
 	"testing"
 )
 
@@ -15,7 +14,7 @@ func Test(t *testing.T) {
 	}
 
 	run := exec.Command("archview", "./...")
-	run.Dir, _ = filepath.Abs("../../testdata/src/example")
+	run.Dir = "testdata/basic"
 
 	result, err = run.CombinedOutput()
 	t.Log(string(result))

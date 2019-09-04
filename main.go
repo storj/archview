@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/storj/archview"
+	"github.com/storj/archview/arch"
 )
 
 func main() {
@@ -28,8 +28,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	world := archview.Analyze(pkgs...)
-	for _, node := range world.List {
+	world := arch.Analyze(pkgs...)
+	for _, node := range world.Components {
 		fmt.Println(node)
 	}
 }

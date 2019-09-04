@@ -1,11 +1,10 @@
-package archview
+package arch
 
 import (
 	"fmt"
 	"go/ast"
 	"go/types"
 	"os"
-	"strings"
 
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
@@ -21,13 +20,13 @@ func Analyze(pkgs ...*packages.Package) *World {
 		}, func(n ast.Node) {
 			ts := n.(*ast.TypeSpec)
 
-			tag, ok := ExtractTypeTag(ts)
+			tag, ok := ExtractAnnotation(ts)
 			if !ok {
 				return
 			}
 
 			obj := pkg.TypesInfo.Defs[ts.Name]
-			world.Add(&Node{
+			world.Add(&Component{
 				Obj:   obj,
 				Type:  obj.Type(),
 				Class: tag,
@@ -36,14 +35,14 @@ func Analyze(pkgs ...*packages.Package) *World {
 		return true
 	}, nil)
 
-	for _, node := range world.List {
-		node.Deps = findDeps("", world, node, node.Type)
+	for _, component := range world.Components {
+		includeDeps("", world, component, component.Type)
 	}
 
 	return world
 }
 
-func findDeps(path string, world *World, node *Node, typ types.Type) (deps []*Dep) {
+func includeDeps(path string, world *World, source *Component, typ types.Type) {
 	switch t := typ.Underlying().(type) {
 	case *types.Interface:
 		for i := 0; i < t.NumMethods(); i++ {
@@ -56,10 +55,7 @@ func findDeps(path string, world *World, node *Node, typ types.Type) (deps []*De
 
 					dep := world.ByType[at.Type().Underlying()]
 					if dep != nil {
-						deps = append(deps, &Dep{
-							Path: strings.TrimPrefix(path+"."+method.Name(), "."),
-							Node: dep,
-						})
+						source.Add(path+"."+method.Name(), dep)
 					}
 				}
 			default:
@@ -74,18 +70,15 @@ func findDeps(path string, world *World, node *Node, typ types.Type) (deps []*De
 
 			dep := world.ByType[underlying]
 			if dep != nil {
-				deps = append(deps, &Dep{
-					Path: strings.TrimPrefix(path+"."+field.Name(), "."),
-					Node: dep,
-				})
+				source.Add(path+"."+field.Name(), dep)
 				continue
 			}
 
 			switch f := underlying.(type) {
 			case *types.Pointer:
-				deps = append(deps, findDeps(path+"."+field.Name(), world, node, f)...)
+				includeDeps(path+"."+field.Name(), world, source, f)
 			case *types.Struct:
-				deps = append(deps, findDeps(path+"."+field.Name(), world, node, f)...)
+				includeDeps(path+"."+field.Name(), world, source, f)
 			default:
 				fmt.Fprintf(os.Stderr, "unhandled method %q type %T\n", path, f)
 			}
@@ -94,5 +87,11 @@ func findDeps(path string, world *World, node *Node, typ types.Type) (deps []*De
 	default:
 		fmt.Fprintf(os.Stderr, "unhandled type %T\n", t)
 	}
-	return deps
+}
+
+func tryDeref(t types.Type) types.Type {
+	if ptr, ok := t.(*types.Pointer); ok {
+		return ptr.Elem().Underlying()
+	}
+	return t.Underlying()
 }
