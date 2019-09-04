@@ -1,5 +1,3 @@
-// want package: "\\Qexample/pgdb.DB[database] = {}\\E"
-
 package pgdb
 
 import (
@@ -7,7 +5,7 @@ import (
 	"example/site/user"
 )
 
-// archview: database
+// archview: Database
 type DB struct{}
 
 func New() *DB {

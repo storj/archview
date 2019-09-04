@@ -1,4 +1,3 @@
-// want package: "\\Qexample/site.DB[database] = {Comments:example/site/comment.Repo, Users:example/site/user.Repo}; example/site.Site[peer] = {User.Endpoint:example/site/user.Endpoint, User.Service:example/site/user.Service, Comment.Endpoint:example/site/comment.Endpoint, Comment.Service:example/site/comment.Service}\\E"
 package site
 
 import (
@@ -9,7 +8,7 @@ import (
 type DB interface {
 	Users() user.Repo
 	Comments() comment.Repo
-} // archview: database
+} // archview: Database
 
 type Site struct {
 	DB DB
@@ -23,4 +22,4 @@ type Site struct {
 		Endpoint *comment.Endpoint
 		Service  *comment.Service
 	}
-} // archview: peer
+} // archview: Peer
