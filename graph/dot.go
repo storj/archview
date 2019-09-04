@@ -12,7 +12,8 @@ import (
 type Dot struct {
 	World *arch.World
 
-	NoColor bool
+	GroupByClass bool
+	NoColor      bool
 }
 
 func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
@@ -27,30 +28,72 @@ func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
 	}
 
 	write("digraph G {\n")
+
+	if dot.NoColor {
+		write("\tnode [fontsize=10 shape=rectangle target=\"_graphviz\"];\n")
+		write("\tedge [];\n")
+	} else {
+		write("\tnode [penwidth=2 fontsize=10 shape=rectangle target=\"_graphviz\"];\n")
+		write("\tedge [penwidth=2];\n")
+	}
+	write("\tcompound=true;\n")
+
+	write("\trankdir=LR;\n")
+	write("\tnewrank=true;\n")
+
+	write("\n")
 	defer write("}\n")
 
-	for _, component := range dot.World.Components {
-		write("\t%s [%v];\n", dot.id(component),
-			strings.Join([]string{
-				dot.label(component), dot.href(component), dot.color(component),
-			}, ","))
+	if dot.GroupByClass {
+		byClass := map[string][]*arch.Component{}
+		for _, component := range dot.World.Components {
+			byClass[component.Class] = append(byClass[component.Class], component)
+		}
+
+		for class, components := range byClass {
+			write("\tsubgraph cluster_%v {\n", class)
+			write("\t\tlabel=%q;\n\n", class)
+			write("\t\tfontsize=8;\n\n")
+			for _, component := range components {
+				write("\t\t%s %v;\n", dot.id(component),
+					attrs(
+						dot.label(component),
+						dot.href(component),
+						dot.color(component),
+					))
+			}
+			write("\t}\n")
+		}
+	} else {
+		for _, component := range dot.World.Components {
+			write("\t%s %v;\n", dot.id(component),
+				attrs(
+					dot.label(component),
+					dot.href(component),
+					dot.color(component),
+				))
+		}
 	}
 
 	write("\n")
 
 	for _, source := range dot.World.Components {
 		for _, dep := range source.Deps {
-			write("\t%s -> %s [%v];\n", dot.id(source), dot.id(dep.Dep),
-				strings.Join([]string{
+			write("\t%s -> %s %v;\n", dot.id(source), dot.id(dep.Dep),
+				attrs(
 					dot.color(dep.Dep),
 					dot.edgetooltip(source, dep),
-				}, ","))
+				))
 		}
 		if len(source.Deps) > 0 {
 			write("\n")
 		}
 	}
 	return n, err
+}
+
+func attrs(list ...string) string {
+	return "[" + strings.Join(list, ",") + "]"
 }
 
 func (dot *Dot) id(component *arch.Component) string {

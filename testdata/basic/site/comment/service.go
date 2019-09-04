@@ -3,7 +3,7 @@ package comment
 
 import "example/site/user"
 
-type Repo interface{} // archview: repo
+type Repo interface{} // archview: database
 
 type Service struct {
 	comments Repo

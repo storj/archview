@@ -32,6 +32,8 @@ func main() {
 
 	dot := graph.Dot{
 		World: world,
+
+		GroupByClass: true,
 	}
 
 	_, _ = dot.WriteTo(os.Stdout)

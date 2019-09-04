@@ -12,6 +12,8 @@ type DB interface {
 } // archview: database
 
 type Site struct {
+	DB DB
+
 	User struct {
 		Endpoint *user.Endpoint
 		Service  *user.Service
