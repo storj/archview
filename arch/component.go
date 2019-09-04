@@ -21,6 +21,14 @@ func (node *Component) Name() string {
 	return node.Type.String()
 }
 
+func (node *Component) PkgPath() string {
+	return node.Obj.Pkg().Path()
+}
+
+func (node *Component) ShortName() string {
+	return node.Obj.Name()
+}
+
 func (node *Component) String() string {
 	names := []string{}
 	for _, dep := range node.Deps {

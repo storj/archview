@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
 	"golang.org/x/tools/go/packages"
 
 	"github.com/storj/archview/arch"
+	"github.com/storj/archview/graph"
 )
 
 func main() {
@@ -29,9 +29,12 @@ func main() {
 	}
 
 	world := arch.Analyze(pkgs...)
-	for _, node := range world.Components {
-		fmt.Println(node)
+
+	dot := graph.Dot{
+		World: world,
 	}
+
+	_, _ = dot.WriteTo(os.Stdout)
 }
 
 const NeedAll = packages.NeedName |
