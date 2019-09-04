@@ -30,10 +30,10 @@ func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
 	write("digraph G {\n")
 
 	if dot.NoColor {
-		write("\tnode [fontsize=10 shape=rectangle target=\"_graphviz\"];\n")
+		write("\tnode [shape=record target=\"_graphviz\"];\n")
 		write("\tedge [];\n")
 	} else {
-		write("\tnode [penwidth=2 fontsize=10 shape=rectangle target=\"_graphviz\"];\n")
+		write("\tnode [penwidth=2 shape=record target=\"_graphviz\"];\n")
 		write("\tedge [penwidth=2];\n")
 	}
 	write("\tcompound=true;\n")
@@ -53,7 +53,7 @@ func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
 		for class, components := range byClass {
 			write("\tsubgraph cluster_%v {\n", class)
 			write("\t\tlabel=%q;\n\n", class)
-			write("\t\tfontsize=8;\n\n")
+			write("\t\tfontsize=10;\n\n")
 			for _, component := range components {
 				write("\t\t%s %v;\n", dot.id(component),
 					attrs(
@@ -93,7 +93,16 @@ func (dot *Dot) WriteTo(w io.Writer) (n int64, err error) {
 }
 
 func attrs(list ...string) string {
-	return "[" + strings.Join(list, ",") + "]"
+	xs := list[:0]
+	for _, x := range list {
+		if x != "" {
+			xs = append(xs, x)
+		}
+	}
+	if len(xs) == 0 {
+		return ""
+	}
+	return "[" + strings.Join(xs, ",") + "]"
 }
 
 func (dot *Dot) id(component *arch.Component) string {
