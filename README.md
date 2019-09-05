@@ -29,4 +29,4 @@ type Server struct {
 
 Allows creating a diagram that looks like:
 
-![Basic Diagram](testdata/basic/basic.svg)
+![Basic Diagram](testdata/basic/graph.svg)

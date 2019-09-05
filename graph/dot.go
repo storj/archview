@@ -32,13 +32,9 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 		write("\tnode [shape=record target=\"_graphviz\"];\n")
 		write("\tedge [];\n")
 	} else {
-		write("\tnode [penwidth=2 shape=record target=\"_graphviz\"];\n")
+		write("\tnode [penwidth=2 shape=record target=\"_graphviz\" style=filled fillcolor=white];\n")
 		write("\tedge [penwidth=2];\n")
 	}
-	write("\tcompound=true;\n")
-
-	write("\trankdir=LR;\n")
-	write("\tnewrank=true;\n")
 
 	write("\n")
 	defer write("}\n")
@@ -52,7 +48,7 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 		for class, components := range byClass {
 			write("\tsubgraph cluster_%v {\n", class)
 			write("\t\tlabel=%q;\n\n", class)
-			write("\t\tfontsize=10;\n\n")
+			write("\t\tbgcolor=gray98; pencolor=gray80; fontsize=10;\n\n")
 			for _, component := range components {
 				write("\t\t%s %v;\n", ctx.id(component),
 					attrs(

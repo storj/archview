@@ -22,8 +22,8 @@ func main() {
 
 	var options graph.Options
 	options.Clustering = graph.ClusterByClass
-	flag.BoolVar(&options.NoColor, "nocolor", false, "disable coloring")
-	flag.Var(&options.Clustering, "cluster", "clustering mode")
+	flag.BoolVar(&options.NoColor, "nocolor", false, "disable coloring (dot only)")
+	flag.Var(&options.Clustering, "cluster", "clustering mode (dot only)")
 
 	flag.Parse()
 
