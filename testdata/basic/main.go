@@ -3,13 +3,13 @@ package main
 // architecture: Database
 type DB interface{}
 
-// architecture: Users
+// architecture: Service
 type Users struct {
 	db       *DB
 	comments *Comments
 }
 
-// architecture: Comments
+// architecture: Service
 type Comments struct {
 	db    *DB
 	users *Users
@@ -17,7 +17,6 @@ type Comments struct {
 
 // architecture: Server
 type Server struct {
-	db       *DB
 	comments *Comments
 	users    *Users
 }

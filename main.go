@@ -50,7 +50,7 @@ func main() {
 	case ".dot", "":
 		format = &graph.Dot{
 			World:        world,
-			GroupByClass: false,
+			GroupByClass: true,
 		}
 	case ".graphml":
 		format = &graph.GraphML{
