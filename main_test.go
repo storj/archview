@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func Test(t *testing.T) {
+func TestBasic(t *testing.T) {
 	tempdir, err := ioutil.TempDir("", "archview")
 	if err != nil {
 		t.Fatal(err)
