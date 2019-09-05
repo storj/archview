@@ -12,8 +12,7 @@ import (
 type Dot struct {
 	World *arch.World
 
-	Clustering Clustering
-	NoColor    bool
+	Options
 }
 
 func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {

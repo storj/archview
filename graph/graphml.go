@@ -12,6 +12,8 @@ import (
 
 type GraphML struct {
 	World *arch.World
+
+	Options
 }
 
 func (ctx *GraphML) WriteTo(w io.Writer) (n int64, err error) {

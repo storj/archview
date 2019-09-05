@@ -2,6 +2,11 @@ package graph
 
 import "fmt"
 
+type Options struct {
+	Clustering Clustering
+	NoColor    bool
+}
+
 type Clustering string
 
 func (mode Clustering) String() string { return string(mode) }

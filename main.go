@@ -20,10 +20,10 @@ func main() {
 	format := flag.String("format", "", "format for output (dot, svg)")
 	outname := flag.String("out", "", "output file")
 
-	nocolor := flag.Bool("nocolor", false, "disable coloring")
-
-	clustering := graph.ClusterByClass
-	flag.Var(&clustering, "cluster", "clustering mode")
+	var options graph.Options
+	options.Clustering = graph.ClusterByClass
+	flag.BoolVar(&options.NoColor, "nocolor", false, "disable coloring")
+	flag.Var(&options.Clustering, "cluster", "clustering mode")
 
 	flag.Parse()
 
@@ -60,9 +60,8 @@ func main() {
 	switch *format {
 	case "dot", "":
 		_, err = (&graph.Dot{
-			World:      world,
-			Clustering: clustering,
-			NoColor:    *nocolor,
+			World:   world,
+			Options: options,
 		}).WriteTo(out)
 
 		if err != nil {
@@ -70,7 +69,8 @@ func main() {
 		}
 	case "graphml":
 		_, err = (&graph.GraphML{
-			World: world,
+			World:   world,
+			Options: options,
 		}).WriteTo(out)
 
 		if err != nil {
