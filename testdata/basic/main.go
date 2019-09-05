@@ -27,4 +27,11 @@ type Comments struct {
 type Server struct {
 	comments *Comments
 	users    *Users
+
+	node *node
+}
+
+// test for recursion
+type node struct {
+	next *node
 }

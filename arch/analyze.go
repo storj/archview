@@ -10,48 +10,65 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// Analyze analyzes packages and extracts architecture annotations and relations.
-func Analyze(pkgs ...*packages.Package) *World {
-	world := NewWorld()
-
-	packages.Visit(pkgs, func(pkg *packages.Package) bool {
-		inspect := inspector.New(pkg.Syntax)
-		inspect.Preorder([]ast.Node{
-			(*ast.GenDecl)(nil),
-		}, func(n ast.Node) {
-			gen := n.(*ast.GenDecl)
-			for _, spec := range gen.Specs {
-				ts, ok := spec.(*ast.TypeSpec)
-				if !ok {
-					continue
-				}
-
-				comment, tag, ok := ExtractAnnotation(gen, ts)
-				if !ok {
-					return
-				}
-
-				obj := pkg.TypesInfo.Defs[ts.Name]
-				world.Add(&Component{
-					Obj:     obj,
-					Type:    obj.Type(),
-					Class:   tag,
-					Comment: comment,
-				})
-			}
-		})
-		return true
-	}, nil)
-
-	for _, component := range world.Components {
-		includeDeps("", world, component, component.Type)
-	}
-
-	return world
+type analysis struct {
+	pkgs  []*packages.Package
+	world *World
 }
 
+// Analyze analyzes packages and extracts architecture annotations and relations.
+func Analyze(pkgs ...*packages.Package) *World {
+	a := &analysis{
+		pkgs:  pkgs,
+		world: NewWorld(),
+	}
+	packages.Visit(pkgs, a.visitpkg, nil)
+
+	for _, component := range a.world.Components {
+		a.includeDeps(component, "", component.Type, visiting{})
+	}
+
+	return a.world
+}
+
+func (a *analysis) visitpkg(pkg *packages.Package) bool {
+	inspect := inspector.New(pkg.Syntax)
+	inspect.Preorder([]ast.Node{
+		(*ast.GenDecl)(nil),
+	}, func(n ast.Node) {
+		gen := n.(*ast.GenDecl)
+		for _, spec := range gen.Specs {
+			ts, ok := spec.(*ast.TypeSpec)
+			if !ok {
+				continue
+			}
+
+			comment, tag, ok := ExtractAnnotation(gen, ts)
+			if !ok {
+				return
+			}
+
+			obj := pkg.TypesInfo.Defs[ts.Name]
+			a.world.Add(&Component{
+				Obj:     obj,
+				Type:    obj.Type(),
+				Class:   tag,
+				Comment: comment,
+			})
+		}
+	})
+	return true
+}
+
+type visiting map[types.Type]struct{}
+
 // includeDeps adds dependencies to source.
-func includeDeps(path string, world *World, source *Component, typ types.Type) {
+func (a *analysis) includeDeps(source *Component, path string, typ types.Type, visiting visiting) {
+	if _, ok := visiting[typ]; ok {
+		return
+	}
+	visiting[typ] = struct{}{}
+	defer delete(visiting, typ)
+
 	switch t := typ.Underlying().(type) {
 	case *types.Interface:
 		for i := 0; i < t.NumMethods(); i++ {
@@ -62,9 +79,9 @@ func includeDeps(path string, world *World, source *Component, typ types.Type) {
 				for i := 0; i < result.Len(); i++ {
 					at := result.At(i)
 
-					dep := world.ByType[at.Type().Underlying()]
+					dep := a.world.ByType[at.Type().Underlying()]
 					if dep != nil {
-						source.Add(path+"."+method.Name(), dep)
+						source.Add(NewDep(path+"."+method.Name(), dep))
 					}
 				}
 			default:
@@ -77,17 +94,17 @@ func includeDeps(path string, world *World, source *Component, typ types.Type) {
 			field := t.Field(i)
 			underlying := tryDeref(field.Type().Underlying())
 
-			dep := world.ByType[underlying]
+			dep := a.world.ByType[underlying]
 			if dep != nil {
-				source.Add(path+"."+field.Name(), dep)
+				source.Add(NewDep(path+"."+field.Name(), dep))
 				continue
 			}
 
 			switch f := underlying.(type) {
 			case *types.Pointer:
-				includeDeps(path+"."+field.Name(), world, source, f)
+				a.includeDeps(source, path+"."+field.Name(), f, visiting)
 			case *types.Struct:
-				includeDeps(path+"."+field.Name(), world, source, f)
+				a.includeDeps(source, path+"."+field.Name(), f, visiting)
 			default:
 				fmt.Fprintf(os.Stderr, "unhandled method %q type %T\n", path, f)
 			}

@@ -31,30 +31,32 @@ func TestBasic(t *testing.T) {
 	}
 
 	for _, match := range matches {
-		outfile := filepath.Join(tempdir, filepath.Base(match)) + ".dot"
+		t.Run(filepath.ToSlash(match), func(t *testing.T) {
+			outfile := filepath.Join(tempdir, filepath.Base(match)) + ".dot"
 
-		run := exec.Command(archviewexe, "-format", "dot-basic", "-out", outfile, "./...")
-		run.Dir = match
+			run := exec.Command(archviewexe, "-format", "dot-basic", "-out", outfile, "./...")
+			run.Dir = match
 
-		result, err = run.CombinedOutput()
-		t.Log(string(result))
-		if err != nil {
-			t.Fatal(err)
-		}
+			result, err = run.CombinedOutput()
+			t.Log(string(result))
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		got, err := ioutil.ReadFile(outfile)
-		if err != nil {
-			t.Fatalf("failed to read output: %v", err)
-		}
-		expected, err := ioutil.ReadFile(filepath.Join(match, "graph.dot"))
-		if err != nil {
-			t.Fatalf("failed to read expected: %v", err)
-		}
+			got, err := ioutil.ReadFile(outfile)
+			if err != nil {
+				t.Fatalf("failed to read output: %v", err)
+			}
+			expected, err := ioutil.ReadFile(filepath.Join(match, "graph.dot"))
+			if err != nil {
+				t.Fatalf("failed to read expected: %v", err)
+			}
 
-		if !bytes.Equal(got, expected) {
-			t.Logf("expected: %q", expected)
-			t.Logf("got     : %q", got)
-			t.Fatal("output does not match the expectation")
-		}
+			if !bytes.Equal(got, expected) {
+				t.Logf("expected: %q", expected)
+				t.Logf("got     : %q", got)
+				t.Fatal("output does not match the expectation")
+			}
+		})
 	}
 }

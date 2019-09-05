@@ -50,9 +50,14 @@ func (node *Component) String() string {
 }
 
 // Add adds a dependency to the component.
-func (node *Component) Add(path string, dep *Component) {
-	node.Deps = append(node.Deps, &Dep{
+func (node *Component) Add(dep *Dep) {
+	node.Deps = append(node.Deps, dep)
+}
+
+// NewDep creates a new dependency.
+func NewDep(path string, dep *Component) *Dep {
+	return &Dep{
 		Path: strings.TrimPrefix(path, "."),
 		Dep:  dep,
-	})
+	}
 }
