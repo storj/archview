@@ -56,7 +56,7 @@ func (ctx *GraphML) graph() *graphml.Graph {
 		addAttr(&outnode.Attrs, "name", component.ShortName())
 		addAttr(&outnode.Attrs, "url", ctx.href(component))
 		addAttr(&outnode.Attrs, "class", component.Class)
-		addAttr(&outnode.Attrs, "package", component.PkgPath())
+		addAttr(&outnode.Attrs, "package", component.Package())
 
 		addYedLabelAttr(&outnode.Attrs, "ynodelabel", component.Name())
 
@@ -93,7 +93,7 @@ func (ctx *GraphML) id(component *arch.Component) string {
 }
 
 func (ctx *GraphML) href(component *arch.Component) string {
-	return "http://godoc.org/" + component.PkgPath() + "#" + component.ShortName()
+	return "http://godoc.org/" + component.Package() + "#" + component.ShortName()
 }
 
 func addAttr(attrs *[]graphml.Attr, key, value string) {

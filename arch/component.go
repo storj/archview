@@ -30,8 +30,8 @@ func (node *Component) Name() string {
 	return node.Type.String()
 }
 
-// PkgPath returns the package name.
-func (node *Component) PkgPath() string {
+// Package returns the package name.
+func (node *Component) Package() string {
 	return node.Obj.Pkg().Path()
 }
 
