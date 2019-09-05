@@ -131,7 +131,7 @@ func (ctx *Dot) edgetooltip(source *arch.Component, dep *arch.Dep) string {
 }
 
 func (ctx *Dot) href(component *arch.Component) string {
-	return fmt.Sprintf("href=%q", "http://godoc.org/"+component.PkgPath()+"#"+component.ShortName())
+	return fmt.Sprintf("href=%q", "http://godoc.org/"+component.Package()+"#"+component.ShortName())
 }
 
 func (ctx *Dot) color(component *arch.Component) string {

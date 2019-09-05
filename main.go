@@ -17,7 +17,7 @@ import (
 func main() {
 	log.SetFlags(0)
 
-	format := flag.String("format", "", "format for output (dot, svg)")
+	format := flag.String("format", "", "format for output (dot, dot-basic, svg)")
 	outname := flag.String("out", "", "output file")
 
 	var options graph.Options
@@ -63,20 +63,20 @@ func main() {
 			World:   world,
 			Options: options,
 		}).WriteTo(out)
-
-		if err != nil {
-			log.Fatalf("unable to write output: %v", err)
-		}
+	case "dot-basic":
+		_, err = (&graph.DotBasic{
+			World:   world,
+			Options: options,
+		}).WriteTo(out)
 	case "graphml":
 		_, err = (&graph.GraphML{
 			World:   world,
 			Options: options,
 		}).WriteTo(out)
-
-		if err != nil {
-			log.Fatalf("unable to write output: %v", err)
-		}
 	default:
 		log.Fatalf("unknown format %q", *format)
+	}
+	if err != nil {
+		log.Fatalf("unable to write output: %v", err)
 	}
 }

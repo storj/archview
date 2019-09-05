@@ -1,0 +1,14 @@
+graph G {
+	"example/site/user.Service" -> "example/site/user.Repo";
+	"example/site/user.Endpoint" -> "example/site/user.Service";
+	"example/site/comment.Service" -> "example/site/comment.Repo";
+	"example/site/comment.Endpoint" -> "example/site/user.Repo";
+	"example/site/comment.Endpoint" -> "example/site/comment.Service";
+	"example/site.DB" -> "example/site/comment.Repo";
+	"example/site.DB" -> "example/site/user.Repo";
+	"example/site.Site" -> "example/site.DB";
+	"example/site.Site" -> "example/site/user.Endpoint";
+	"example/site.Site" -> "example/site/user.Service";
+	"example/site.Site" -> "example/site/comment.Endpoint";
+	"example/site.Site" -> "example/site/comment.Service";
+}

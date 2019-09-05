@@ -1,0 +1,8 @@
+graph G {
+	"example/basic.Users" -> "example/basic.DB";
+	"example/basic.Users" -> "example/basic.Comments";
+	"example/basic.Comments" -> "example/basic.DB";
+	"example/basic.Comments" -> "example/basic.Users";
+	"example/basic.Server" -> "example/basic.Comments";
+	"example/basic.Server" -> "example/basic.Users";
+}
