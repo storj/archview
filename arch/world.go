@@ -5,11 +5,13 @@ import (
 	"strings"
 )
 
+// World contains the component and relation information.
 type World struct {
 	ByType     map[types.Type]*Component
 	Components []*Component
 }
 
+// NewWorld creates a new world.
 func NewWorld() *World {
 	return &World{
 		ByType:     map[types.Type]*Component{},
@@ -17,13 +19,13 @@ func NewWorld() *World {
 	}
 }
 
-func (world *World) Empty() bool { return len(world.Components) == 0 }
-
+// Add adds a new component to world.
 func (world *World) Add(n *Component) {
 	world.ByType[n.Type.Underlying()] = n
 	world.Components = append(world.Components, n)
 }
 
+// String creates a short description of the world that is useful for debugging.
 func (world *World) String() string {
 	texts := []string{}
 	for _, component := range world.Components {

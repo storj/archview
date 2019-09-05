@@ -10,12 +10,14 @@ import (
 	"github.com/storj/archview/graph/graphml"
 )
 
+// GraphML implements .graphml encoding.
 type GraphML struct {
 	World *arch.World
 
 	Options
 }
 
+// WriteTo writes .graphml encoding to w.
 func (ctx *GraphML) WriteTo(w io.Writer) (n int64, err error) {
 	file := graphml.NewFile()
 

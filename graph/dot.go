@@ -9,12 +9,14 @@ import (
 	"github.com/storj/archview/arch"
 )
 
+// Dot implements .dot encoding.
 type Dot struct {
 	World *arch.World
 
 	Options
 }
 
+// WriteTo writes dot output to w.
 func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 	write := func(format string, args ...interface{}) bool {
 		if err != nil {

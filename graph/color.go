@@ -5,29 +5,13 @@ import (
 	"math"
 )
 
+// hslahex converts HSLA to RGBA hex
 func hslahex(h, s, l, a float64) string {
 	r, g, b, xa := hsla(h, s, l, a)
 	return fmt.Sprintf("\"#%02x%02x%02x%02x\"", sat8(r), sat8(g), sat8(b), sat8(xa))
 }
 
-func hue(v1, v2, h float64) float64 {
-	if h < 0 {
-		h += 1
-	}
-	if h > 1 {
-		h -= 1
-	}
-	if 6*h < 1 {
-		return v1 + (v2-v1)*6*h
-	} else if 2*h < 1 {
-		return v2
-	} else if 3*h < 2 {
-		return v1 + (v2-v1)*(2.0/3.0-h)*6
-	}
-
-	return v1
-}
-
+// hsla converts HSLA to RGBA
 func hsla(h, s, l, a float64) (r, g, b, ra float64) {
 	if s == 0 {
 		return l, l, l, a
@@ -49,6 +33,24 @@ func hsla(h, s, l, a float64) (r, g, b, ra float64) {
 	ra = a
 
 	return
+}
+
+func hue(v1, v2, h float64) float64 {
+	if h < 0 {
+		h += 1.0
+	}
+	if h > 1 {
+		h -= 1.0
+	}
+	if 6*h < 1 {
+		return v1 + (v2-v1)*6*h
+	} else if 2*h < 1 {
+		return v2
+	} else if 3*h < 2 {
+		return v1 + (v2-v1)*(2.0/3.0-h)*6
+	}
+
+	return v1
 }
 
 // sat8 converts 0..1 float to 0..255 uint8

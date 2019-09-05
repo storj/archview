@@ -10,6 +10,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+// Analyze analyzes packages and extracts architecture annotations and relations.
 func Analyze(pkgs ...*packages.Package) *World {
 	world := NewWorld()
 
@@ -49,6 +50,7 @@ func Analyze(pkgs ...*packages.Package) *World {
 	return world
 }
 
+// includeDeps adds dependencies to source.
 func includeDeps(path string, world *World, source *Component, typ types.Type) {
 	switch t := typ.Underlying().(type) {
 	case *types.Interface:

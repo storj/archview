@@ -5,32 +5,42 @@ import (
 	"strings"
 )
 
+// Component is a architectural piece that is related to other pieces.
 type Component struct {
 	Obj  types.Object
 	Type types.Type
+
+	// Deps contains a list of components that it depends on.
 	Deps []*Dep
 
-	Class   string
+	// Class is the functional categorization of the component.
+	Class string
+	// Comment has the type documentation.
 	Comment string
 }
 
+// Dep is a connection to another component.
 type Dep struct {
 	Path string
 	Dep  *Component
 }
 
+// Name returns the fully qualified name of the component.
 func (node *Component) Name() string {
 	return node.Type.String()
 }
 
+// PkgPath returns the package name.
 func (node *Component) PkgPath() string {
 	return node.Obj.Pkg().Path()
 }
 
+// ShortName returns name without package.
 func (node *Component) ShortName() string {
 	return node.Obj.Name()
 }
 
+// String creates a short description of the component that is useful for debugging.
 func (node *Component) String() string {
 	names := []string{}
 	for _, dep := range node.Deps {
@@ -39,6 +49,7 @@ func (node *Component) String() string {
 	return node.Name() + "[" + node.Class + "] = {" + strings.Join(names, ", ") + "}"
 }
 
+// Add adds a dependency to the component.
 func (node *Component) Add(path string, dep *Component) {
 	node.Deps = append(node.Deps, &Dep{
 		Path: strings.TrimPrefix(path, "."),
