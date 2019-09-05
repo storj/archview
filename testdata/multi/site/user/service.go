@@ -1,6 +1,6 @@
 package user
 
-// Repoo implements the users repo.
+// Repo implements the users repo.
 //
 // architecture: Database
 type Repo interface {

@@ -1,3 +1,3 @@
-module example
+module example/basic
 
-go 1.12
+go 1.13
