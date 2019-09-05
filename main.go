@@ -21,7 +21,6 @@ func main() {
 	outname := flag.String("out", "", "output file")
 
 	var options graph.Options
-	options.Clustering = graph.ClusterByClass
 	flag.BoolVar(&options.NoColor, "nocolor", false, "disable coloring (dot only)")
 	flag.Var(&options.Clustering, "cluster", "clustering mode (dot only)")
 
