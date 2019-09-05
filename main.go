@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"golang.org/x/tools/go/packages"
 
@@ -16,19 +17,15 @@ import (
 func main() {
 	log.SetFlags(0)
 
+	format := flag.String("format", "", "format for output (dot, svg)")
 	outname := flag.String("out", "", "output file")
+
+	nocolor := flag.Bool("nocolor", false, "disable coloring")
+
+	clustering := graph.ClusterByClass
+	flag.Var(&clustering, "cluster", "clustering mode")
+
 	flag.Parse()
-
-	var out io.Writer = os.Stdout
-	if *outname != "" {
-		file, err := os.Create(*outname)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer file.Close()
-
-		out = file
-	}
 
 	args := flag.Args()
 	if len(args) == 0 {
@@ -45,23 +42,41 @@ func main() {
 
 	world := arch.Analyze(pkgs...)
 
-	var format io.WriterTo
-	switch ext := filepath.Ext(*outname); ext {
-	case ".dot", "":
-		format = &graph.Dot{
-			World:        world,
-			GroupByClass: true,
-		}
-	case ".graphml":
-		format = &graph.GraphML{
-			World: world,
-		}
-	default:
-		log.Fatalf("unknown format %q", ext)
+	if *format == "" {
+		*format = strings.TrimPrefix(filepath.Ext(*outname), ".")
 	}
 
-	_, err = format.WriteTo(out)
-	if err != nil {
-		log.Fatal(err)
+	var out io.Writer = os.Stdout
+	if *outname != "" {
+		file, err := os.Create(*outname)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		out = file
+	}
+
+	switch *format {
+	case "dot", "":
+		_, err = (&graph.Dot{
+			World:      world,
+			Clustering: clustering,
+			NoColor:    *nocolor,
+		}).WriteTo(out)
+
+		if err != nil {
+			log.Fatalf("unable to write output: %v", err)
+		}
+	case "graphml":
+		_, err = (&graph.GraphML{
+			World: world,
+		}).WriteTo(out)
+
+		if err != nil {
+			log.Fatalf("unable to write output: %v", err)
+		}
+	default:
+		log.Fatalf("unknown format %q", *format)
 	}
 }

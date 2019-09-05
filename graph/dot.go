@@ -12,8 +12,8 @@ import (
 type Dot struct {
 	World *arch.World
 
-	GroupByClass bool
-	NoColor      bool
+	Clustering Clustering
+	NoColor    bool
 }
 
 func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
@@ -44,7 +44,7 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 	write("\n")
 	defer write("}\n")
 
-	if ctx.GroupByClass {
+	if ctx.Clustering == ClusterByClass {
 		byClass := map[string][]*arch.Component{}
 		for _, component := range ctx.World.Components {
 			byClass[component.Class] = append(byClass[component.Class], component)
