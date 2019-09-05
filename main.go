@@ -21,6 +21,7 @@ func main() {
 	outname := flag.String("out", "", "output file")
 
 	var options graph.Options
+	flag.StringVar(&options.TrimPrefix, "trim-prefix", "", "trim label prefix")
 	flag.BoolVar(&options.NoColor, "nocolor", false, "disable coloring (dot only)")
 	flag.Var(&options.Clustering, "cluster", "clustering mode (dot only)")
 

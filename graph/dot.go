@@ -119,7 +119,7 @@ func (ctx *Dot) id(component *arch.Component) string {
 }
 
 func (ctx *Dot) label(component *arch.Component) string {
-	return fmt.Sprintf("label=%q", component.Name())
+	return fmt.Sprintf("label=%q", strings.TrimPrefix(component.Name(), ctx.TrimPrefix))
 }
 
 func (ctx *Dot) nodetooltip(component *arch.Component) string {

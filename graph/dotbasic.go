@@ -3,6 +3,7 @@ package graph
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/storj/archview/arch"
 )
@@ -31,7 +32,7 @@ func (ctx *DotBasic) WriteTo(w io.Writer) (n int64, err error) {
 
 	for _, source := range ctx.World.Components {
 		for _, dep := range source.Deps {
-			write("\t%q -> %q;\n", source.Name(), dep.Dep.Name())
+			write("\t%q -> %q;\n", strings.TrimPrefix(source.Name(), ctx.TrimPrefix), strings.TrimPrefix(dep.Dep.Name(), ctx.TrimPrefix))
 		}
 	}
 	return n, err

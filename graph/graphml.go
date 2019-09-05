@@ -50,7 +50,7 @@ func (ctx *GraphML) graph() *graphml.Graph {
 		outnode := graphml.Node{}
 		outnode.ID = ctx.id(component)
 
-		addAttr(&outnode.Attrs, "label", component.Name())
+		addAttr(&outnode.Attrs, "label", strings.TrimPrefix(component.Name(), ctx.TrimPrefix))
 		addAttr(&outnode.Attrs, "tooltip", component.Comment)
 
 		addAttr(&outnode.Attrs, "name", component.ShortName())
@@ -58,7 +58,7 @@ func (ctx *GraphML) graph() *graphml.Graph {
 		addAttr(&outnode.Attrs, "class", component.Class)
 		addAttr(&outnode.Attrs, "package", component.Package())
 
-		addYedLabelAttr(&outnode.Attrs, "ynodelabel", component.Name())
+		addYedLabelAttr(&outnode.Attrs, "ynodelabel", strings.TrimPrefix(component.Name(), ctx.TrimPrefix))
 
 		out.Node = append(out.Node, outnode)
 	}

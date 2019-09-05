@@ -85,7 +85,7 @@ func (a *analysis) includeDeps(source *Component, path string, typ types.Type, v
 					}
 				}
 			default:
-				fmt.Fprintf(os.Stderr, "unhandled method type %T\n", m)
+				fmt.Fprintf(os.Stderr, "unhandled interface method type %T\n", m)
 			}
 		}
 
@@ -105,11 +105,18 @@ func (a *analysis) includeDeps(source *Component, path string, typ types.Type, v
 				a.includeDeps(source, path+"."+field.Name(), f, visiting)
 			case *types.Struct:
 				a.includeDeps(source, path+"."+field.Name(), f, visiting)
+			case *types.Interface:
+				a.includeDeps(source, path+"."+field.Name(), f, visiting)
+
+			case *types.Array, *types.Signature, *types.Slice, *types.Basic, *types.Chan, *types.Map:
+				// ignore basic compound types
 			default:
-				fmt.Fprintf(os.Stderr, "unhandled method %q type %T\n", path, f)
+				fmt.Fprintf(os.Stderr, "unhandled struct field %q type %T\n", path, f)
 			}
 		}
 
+	case *types.Array, *types.Signature, *types.Slice, *types.Basic, *types.Chan, *types.Map:
+		// ignore basic compound types
 	default:
 		fmt.Fprintf(os.Stderr, "unhandled type %T\n", t)
 	}

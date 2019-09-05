@@ -4,6 +4,7 @@ import "fmt"
 
 // Options contains graph formatting and output configuration.
 type Options struct {
+	TrimPrefix string
 	Clustering Clustering
 	NoColor    bool
 }
