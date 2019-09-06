@@ -23,6 +23,8 @@ type Component struct {
 type Link struct {
 	Path   string
 	Target *Component
+
+	Implementation bool
 }
 
 // Name returns the fully qualified name of the component.
@@ -59,5 +61,14 @@ func NewLink(path string, target *Component) *Link {
 	return &Link{
 		Path:   strings.TrimPrefix(path, "."),
 		Target: target,
+	}
+}
+
+// NewImplLink creates a new link.
+func NewImplLink(target *Component) *Link {
+	return &Link{
+		Target: target,
+
+		Implementation: true,
 	}
 }

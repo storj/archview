@@ -1,4 +1,6 @@
 graph G {
+	"example/basic.DB" -> "example/basic.PostgresDB";
+	"example/basic.DB" -> "example/basic.SqliteDB";
 	"example/basic.Users" -> "example/basic.DB";
 	"example/basic.Users" -> "example/basic.Comments";
 	"example/basic.Comments" -> "example/basic.DB";

@@ -53,8 +53,8 @@ func TestBasic(t *testing.T) {
 			}
 
 			if !bytes.Equal(got, expected) {
-				t.Logf("expected: %q", expected)
-				t.Logf("got     : %q", got)
+				t.Logf("expected:\n%s", expected)
+				t.Logf("got     :\n%s", got)
 				t.Fatal("output does not match the expectation")
 			}
 		})

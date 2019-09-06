@@ -3,7 +3,9 @@ package main
 // DB is database.
 //
 // architecture: Database
-type DB interface{}
+type DB interface {
+	Query() string
+}
 
 // Users is a service.
 //
@@ -35,3 +37,23 @@ type Server struct {
 type node struct {
 	next *node
 }
+
+var _ DB = &PostgresDB{}
+
+// PostgresDB implements DB
+//
+// architecture: Database Implementation
+type PostgresDB struct{}
+
+// Query returns a string.
+func (db *PostgresDB) Query() string { return "string" }
+
+var _ DB = (*SqliteDB)(nil)
+
+// SqliteDB implements DB
+//
+// architecture: Database Implementation
+type SqliteDB struct{}
+
+// Query returns a string.
+func (db *SqliteDB) Query() string { return "string" }

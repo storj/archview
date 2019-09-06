@@ -21,16 +21,19 @@ func Analyze(pkgs ...*packages.Package) *World {
 		pkgs:  pkgs,
 		world: NewWorld(),
 	}
-	packages.Visit(pkgs, a.visitpkg, nil)
+
+	packages.Visit(pkgs, a.addComponents, nil)
 
 	for _, component := range a.world.Components {
 		a.includeLinks(component, "", component.Type, visiting{})
 	}
 
+	packages.Visit(pkgs, a.addImpls, nil)
+
 	return a.world
 }
 
-func (a *analysis) visitpkg(pkg *packages.Package) bool {
+func (a *analysis) addComponents(pkg *packages.Package) bool {
 	inspect := inspector.New(pkg.Syntax)
 	inspect.Preorder([]ast.Node{
 		(*ast.GenDecl)(nil),
@@ -39,6 +42,7 @@ func (a *analysis) visitpkg(pkg *packages.Package) bool {
 		for _, spec := range gen.Specs {
 			ts, ok := spec.(*ast.TypeSpec)
 			if !ok {
+				fmt.Printf("%v %v %T\n", pkg.PkgPath, n, spec)
 				continue
 			}
 
@@ -54,6 +58,46 @@ func (a *analysis) visitpkg(pkg *packages.Package) bool {
 				Class:   tag,
 				Comment: comment,
 			})
+		}
+	})
+	return true
+}
+
+func (a *analysis) addImpls(pkg *packages.Package) bool {
+	inspect := inspector.New(pkg.Syntax)
+	inspect.Preorder([]ast.Node{
+		(*ast.GenDecl)(nil),
+	}, func(n ast.Node) {
+		gen := n.(*ast.GenDecl)
+		for _, spec := range gen.Specs {
+			vs, ok := spec.(*ast.ValueSpec)
+			if !ok {
+				continue
+			}
+			// ignore func calls
+			if len(vs.Names) != len(vs.Values) {
+				continue
+			}
+
+			for i, source := range vs.Names {
+				obj := pkg.TypesInfo.ObjectOf(source)
+				linkFrom, isComponent := a.world.ByType[tryDeref(obj.Type().Underlying())]
+				if !isComponent {
+					continue
+				}
+
+				target := pkg.TypesInfo.TypeOf(vs.Values[i])
+				if target == nil {
+					continue
+				}
+
+				linkTo, isComponent := a.world.ByType[tryDeref(target.Underlying())]
+				if !isComponent {
+					continue
+				}
+
+				linkFrom.Add(NewImplLink(linkTo))
+			}
 		}
 	})
 	return true
