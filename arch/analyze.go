@@ -42,7 +42,6 @@ func (a *analysis) addComponents(pkg *packages.Package) bool {
 		for _, spec := range gen.Specs {
 			ts, ok := spec.(*ast.TypeSpec)
 			if !ok {
-				fmt.Printf("%v %v %T\n", pkg.PkgPath, n, spec)
 				continue
 			}
 

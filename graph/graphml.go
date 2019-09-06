@@ -33,6 +33,8 @@ func (ctx *GraphML) WriteTo(w io.Writer) (n int64, err error) {
 		{For: "node", ID: "class", AttrName: "class", AttrType: "string"},
 		{For: "node", ID: "package", AttrName: "package", AttrType: "string"},
 
+		{For: "edge", ID: "relation", AttrName: "relation", AttrType: "string"},
+
 		{For: "node", ID: "ynodelabel", YFilesType: "nodegraphics"},
 		{For: "edge", ID: "yedgelabel", YFilesType: "edgegraphics"},
 	}
@@ -81,6 +83,10 @@ func (ctx *GraphML) graph() *graphml.Graph {
 			outedge.Target = ctx.id(link.Target)
 
 			addAttr(&outedge.Attrs, "tooltip", link.Path)
+			if link.Implementation {
+				addAttr(&outedge.Attrs, "relation", "implementation")
+			}
+
 			out.Edge = append(out.Edge, outedge)
 		}
 	}
