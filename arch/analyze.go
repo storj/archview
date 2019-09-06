@@ -24,7 +24,7 @@ func Analyze(pkgs ...*packages.Package) *World {
 	packages.Visit(pkgs, a.visitpkg, nil)
 
 	for _, component := range a.world.Components {
-		a.includeDeps(component, "", component.Type, visiting{})
+		a.includeLinks(component, "", component.Type, visiting{})
 	}
 
 	return a.world
@@ -61,8 +61,8 @@ func (a *analysis) visitpkg(pkg *packages.Package) bool {
 
 type visiting map[types.Type]struct{}
 
-// includeDeps adds dependencies to source.
-func (a *analysis) includeDeps(source *Component, path string, typ types.Type, visiting visiting) {
+// includeLinks adds dependencies to source.
+func (a *analysis) includeLinks(source *Component, path string, typ types.Type, visiting visiting) {
 	if _, ok := visiting[typ]; ok {
 		return
 	}
@@ -79,9 +79,9 @@ func (a *analysis) includeDeps(source *Component, path string, typ types.Type, v
 				for i := 0; i < result.Len(); i++ {
 					at := result.At(i)
 
-					dep := a.world.ByType[at.Type().Underlying()]
-					if dep != nil {
-						source.Add(NewDep(path+"."+method.Name(), dep))
+					link := a.world.ByType[at.Type().Underlying()]
+					if link != nil {
+						source.Add(NewLink(path+"."+method.Name(), link))
 					}
 				}
 			default:
@@ -94,19 +94,19 @@ func (a *analysis) includeDeps(source *Component, path string, typ types.Type, v
 			field := t.Field(i)
 			underlying := tryDeref(field.Type().Underlying())
 
-			dep := a.world.ByType[underlying]
-			if dep != nil {
-				source.Add(NewDep(path+"."+field.Name(), dep))
+			link := a.world.ByType[underlying]
+			if link != nil {
+				source.Add(NewLink(path+"."+field.Name(), link))
 				continue
 			}
 
 			switch f := underlying.(type) {
 			case *types.Pointer:
-				a.includeDeps(source, path+"."+field.Name(), f, visiting)
+				a.includeLinks(source, path+"."+field.Name(), f, visiting)
 			case *types.Struct:
-				a.includeDeps(source, path+"."+field.Name(), f, visiting)
+				a.includeLinks(source, path+"."+field.Name(), f, visiting)
 			case *types.Interface:
-				a.includeDeps(source, path+"."+field.Name(), f, visiting)
+				a.includeLinks(source, path+"."+field.Name(), f, visiting)
 
 			case *types.Array, *types.Signature, *types.Slice, *types.Basic, *types.Chan, *types.Map:
 				// ignore basic compound types

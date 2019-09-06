@@ -34,12 +34,12 @@ func (ctx *DotBasic) WriteTo(w io.Writer) (n int64, err error) {
 		if ctx.Skip(source) {
 			continue
 		}
-		for _, dep := range source.Deps {
-			if ctx.Skip(dep.Dep) {
+		for _, link := range source.Links {
+			if ctx.Skip(link.Target) {
 				continue
 			}
 
-			write("\t%q -> %q;\n", strings.TrimPrefix(source.Name(), ctx.TrimPrefix), strings.TrimPrefix(dep.Dep.Name(), ctx.TrimPrefix))
+			write("\t%q -> %q;\n", strings.TrimPrefix(source.Name(), ctx.TrimPrefix), strings.TrimPrefix(link.Target.Name(), ctx.TrimPrefix))
 		}
 	}
 	return n, err

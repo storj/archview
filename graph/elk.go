@@ -42,14 +42,14 @@ func (ctx *ELK) WriteTo(w io.Writer) (n int64, err error) {
 		if ctx.Skip(source) {
 			continue
 		}
-		for _, dep := range source.Deps {
-			if ctx.Skip(dep.Dep) {
+		for _, link := range source.Links {
+			if ctx.Skip(link.Target) {
 				continue
 			}
 
 			write("edge %v -> %v\n",
 				sanitize(strings.TrimPrefix(source.Name(), ctx.TrimPrefix)),
-				sanitize(strings.TrimPrefix(dep.Dep.Name(), ctx.TrimPrefix)),
+				sanitize(strings.TrimPrefix(link.Target.Name(), ctx.TrimPrefix)),
 			)
 		}
 	}

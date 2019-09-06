@@ -10,8 +10,8 @@ type Component struct {
 	Obj  types.Object
 	Type types.Type
 
-	// Deps contains a list of components that it depends on.
-	Deps []*Dep
+	// Links contains a list of components that it is linked to
+	Links []*Link
 
 	// Class is the functional categorization of the component.
 	Class string
@@ -19,10 +19,10 @@ type Component struct {
 	Comment string
 }
 
-// Dep is a connection to another component.
-type Dep struct {
-	Path string
-	Dep  *Component
+// Link is a connection to another component.
+type Link struct {
+	Path   string
+	Target *Component
 }
 
 // Name returns the fully qualified name of the component.
@@ -43,21 +43,21 @@ func (node *Component) ShortName() string {
 // String creates a short description of the component that is useful for debugging.
 func (node *Component) String() string {
 	names := []string{}
-	for _, dep := range node.Deps {
-		names = append(names, dep.Path+":"+dep.Dep.Name())
+	for _, link := range node.Links {
+		names = append(names, link.Path+":"+link.Target.Name())
 	}
 	return node.Name() + "[" + node.Class + "] = {" + strings.Join(names, ", ") + "}"
 }
 
 // Add adds a dependency to the component.
-func (node *Component) Add(dep *Dep) {
-	node.Deps = append(node.Deps, dep)
+func (node *Component) Add(link *Link) {
+	node.Links = append(node.Links, link)
 }
 
-// NewDep creates a new dependency.
-func NewDep(path string, dep *Component) *Dep {
-	return &Dep{
-		Path: strings.TrimPrefix(path, "."),
-		Dep:  dep,
+// NewLink creates a new link.
+func NewLink(path string, target *Component) *Link {
+	return &Link{
+		Path:   strings.TrimPrefix(path, "."),
+		Target: target,
 	}
 }

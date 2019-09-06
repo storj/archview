@@ -71,16 +71,16 @@ func (ctx *GraphML) graph() *graphml.Graph {
 		if ctx.Skip(source) {
 			continue
 		}
-		for _, dep := range source.Deps {
-			if ctx.Skip(dep.Dep) {
+		for _, link := range source.Links {
+			if ctx.Skip(link.Target) {
 				continue
 			}
 
 			outedge := graphml.Edge{}
 			outedge.Source = ctx.id(source)
-			outedge.Target = ctx.id(dep.Dep)
+			outedge.Target = ctx.id(link.Target)
 
-			addAttr(&outedge.Attrs, "tooltip", dep.Path)
+			addAttr(&outedge.Attrs, "tooltip", link.Path)
 			out.Edge = append(out.Edge, outedge)
 		}
 	}

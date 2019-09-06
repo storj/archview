@@ -87,18 +87,18 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 		if ctx.Skip(source) {
 			continue
 		}
-		for _, dep := range source.Deps {
-			if ctx.Skip(dep.Dep) {
+		for _, link := range source.Links {
+			if ctx.Skip(link.Target) {
 				continue
 			}
 
-			write("\t%s -> %s %v;\n", ctx.id(source), ctx.id(dep.Dep),
+			write("\t%s -> %s %v;\n", ctx.id(source), ctx.id(link.Target),
 				attrs(
-					ctx.color(dep.Dep),
-					ctx.edgetooltip(source, dep),
+					ctx.color(link.Target),
+					ctx.edgetooltip(source, link),
 				))
 		}
-		if len(source.Deps) > 0 {
+		if len(source.Links) > 0 {
 			write("\n")
 		}
 	}
@@ -141,8 +141,8 @@ func (ctx *Dot) nodetooltip(component *arch.Component) string {
 	return fmt.Sprintf("tooltip=%q", component.Comment)
 }
 
-func (ctx *Dot) edgetooltip(source *arch.Component, dep *arch.Dep) string {
-	return fmt.Sprintf("tooltip=%q", dep.Path)
+func (ctx *Dot) edgetooltip(source *arch.Component, link *arch.Link) string {
+	return fmt.Sprintf("tooltip=%q", link.Path)
 }
 
 func (ctx *Dot) href(component *arch.Component) string {
