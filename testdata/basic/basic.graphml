@@ -1,0 +1,92 @@
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xsi:schemalocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+	<key id="label" for="node" attr.name="label" attr.type="string"></key>
+	<key id="shape" for="node" attr.name="shape" attr.type="string"></key>
+	<key id="label" for="edge" attr.name="label" attr.type="string"></key>
+	<key id="name" for="node" attr.name="name" attr.type="string"></key>
+	<key id="url" for="node" attr.name="url" attr.type="string"></key>
+	<key id="class" for="node" attr.name="class" attr.type="string"></key>
+	<key id="package" for="node" attr.name="package" attr.type="string"></key>
+	<key id="relation" for="edge" attr.name="relation" attr.type="string"></key>
+	<key id="ynodelabel" for="node" yfiles.type="nodegraphics"></key>
+	<key id="yedgelabel" for="edge" yfiles.type="edgegraphics"></key>
+	<graph id="" edgedefault="directed">
+		<node id="example_basic_DB">
+			<data key="label">example/basic.DB</data>
+			<data key="tooltip">DB is database.&#xA;</data>
+			<data key="name">DB</data>
+			<data key="url">http://godoc.org/example/basic#DB</data>
+			<data key="class">Database</data>
+			<data key="package">example/basic</data>
+			<data key="ynodelabel"><y:ShapeNode><y:NodeLabel>example/basic.DB</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="example_basic_Users">
+			<data key="label">example/basic.Users</data>
+			<data key="tooltip">Users is a service.&#xA;</data>
+			<data key="name">Users</data>
+			<data key="url">http://godoc.org/example/basic#Users</data>
+			<data key="class">Service</data>
+			<data key="package">example/basic</data>
+			<data key="ynodelabel"><y:ShapeNode><y:NodeLabel>example/basic.Users</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="example_basic_Comments">
+			<data key="label">example/basic.Comments</data>
+			<data key="tooltip">Comments is a service.&#xA;</data>
+			<data key="name">Comments</data>
+			<data key="url">http://godoc.org/example/basic#Comments</data>
+			<data key="class">Service</data>
+			<data key="package">example/basic</data>
+			<data key="ynodelabel"><y:ShapeNode><y:NodeLabel>example/basic.Comments</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="example_basic_Server">
+			<data key="label">example/basic.Server</data>
+			<data key="tooltip">Server is a server.&#xA;</data>
+			<data key="name">Server</data>
+			<data key="url">http://godoc.org/example/basic#Server</data>
+			<data key="class">Server</data>
+			<data key="package">example/basic</data>
+			<data key="ynodelabel"><y:ShapeNode><y:NodeLabel>example/basic.Server</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="example_basic_PostgresDB">
+			<data key="label">example/basic.PostgresDB</data>
+			<data key="tooltip">PostgresDB implements DB&#xA;</data>
+			<data key="name">PostgresDB</data>
+			<data key="url">http://godoc.org/example/basic#PostgresDB</data>
+			<data key="class">Database Implementation</data>
+			<data key="package">example/basic</data>
+			<data key="ynodelabel"><y:ShapeNode><y:NodeLabel>example/basic.PostgresDB</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="example_basic_SqliteDB">
+			<data key="label">example/basic.SqliteDB</data>
+			<data key="tooltip">SqliteDB implements DB&#xA;</data>
+			<data key="name">SqliteDB</data>
+			<data key="url">http://godoc.org/example/basic#SqliteDB</data>
+			<data key="class">Database Implementation</data>
+			<data key="package">example/basic</data>
+			<data key="ynodelabel"><y:ShapeNode><y:NodeLabel>example/basic.SqliteDB</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<edge source="example_basic_DB" target="example_basic_PostgresDB">
+			<data key="relation">implementation</data>
+		</edge>
+		<edge source="example_basic_DB" target="example_basic_SqliteDB">
+			<data key="relation">implementation</data>
+		</edge>
+		<edge source="example_basic_Users" target="example_basic_DB">
+			<data key="tooltip">db</data>
+		</edge>
+		<edge source="example_basic_Users" target="example_basic_Comments">
+			<data key="tooltip">comments</data>
+		</edge>
+		<edge source="example_basic_Comments" target="example_basic_DB">
+			<data key="tooltip">db</data>
+		</edge>
+		<edge source="example_basic_Comments" target="example_basic_Users">
+			<data key="tooltip">users</data>
+		</edge>
+		<edge source="example_basic_Server" target="example_basic_Comments">
+			<data key="tooltip">comments</data>
+		</edge>
+		<edge source="example_basic_Server" target="example_basic_Users">
+			<data key="tooltip">users</data>
+		</edge>
+	</graph>
+</graphml>

@@ -17,7 +17,7 @@ import (
 func main() {
 	log.SetFlags(0)
 
-	format := flag.String("format", "", "format for output (dot, dot-basic, svg)")
+	format := flag.String("format", "", "format for output (dot, dot-basic, graphml, elk)")
 	outname := flag.String("out", "", "output file")
 
 	var options graph.Options
