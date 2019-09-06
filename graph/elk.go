@@ -8,15 +8,15 @@ import (
 	"github.com/storj/archview/arch"
 )
 
-// DotBasic implements basic .dot encoding.
-type DotBasic struct {
+// ELK implements basic ELK compatible encoding.
+type ELK struct {
 	World *arch.World
 
 	Options
 }
 
 // WriteTo writes dot output to w.
-func (ctx *DotBasic) WriteTo(w io.Writer) (n int64, err error) {
+func (ctx *ELK) WriteTo(w io.Writer) (n int64, err error) {
 	write := func(format string, args ...interface{}) bool {
 		if err != nil {
 			return false
@@ -27,8 +27,16 @@ func (ctx *DotBasic) WriteTo(w io.Writer) (n int64, err error) {
 		return err == nil
 	}
 
-	write("graph G {\n")
-	defer write("}\n")
+	write("algorithm: layered\n\n")
+
+	for _, source := range ctx.World.Components {
+		if ctx.Skip(source) {
+			continue
+		}
+		write("node %v\n", sanitize(strings.TrimPrefix(source.Name(), ctx.TrimPrefix)))
+	}
+
+	write("\n")
 
 	for _, source := range ctx.World.Components {
 		if ctx.Skip(source) {
@@ -39,7 +47,10 @@ func (ctx *DotBasic) WriteTo(w io.Writer) (n int64, err error) {
 				continue
 			}
 
-			write("\t%q -> %q;\n", strings.TrimPrefix(source.Name(), ctx.TrimPrefix), strings.TrimPrefix(dep.Dep.Name(), ctx.TrimPrefix))
+			write("edge %v -> %v\n",
+				sanitize(strings.TrimPrefix(source.Name(), ctx.TrimPrefix)),
+				sanitize(strings.TrimPrefix(dep.Dep.Name(), ctx.TrimPrefix)),
+			)
 		}
 	}
 	return n, err

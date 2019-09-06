@@ -29,6 +29,8 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 	}
 
 	write("digraph G {\n")
+	write("\trankdir=LR;\n")
+	write("\tranksep=2 equally;\n")
 
 	if ctx.NoColor {
 		write("\tnode [shape=record target=\"_graphviz\"];\n")
@@ -48,10 +50,13 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 		}
 
 		for class, components := range byClass {
-			write("\tsubgraph cluster_%v {\n", class)
+			write("\tsubgraph cluster_%v {\n", sanitize(class))
 			write("\t\tlabel=%q;\n\n", class)
 			write("\t\tbgcolor=gray98; pencolor=gray80; fontsize=10;\n\n")
 			for _, component := range components {
+				if ctx.Skip(component) {
+					continue
+				}
 				write("\t\t%s %v;\n", ctx.id(component),
 					attrs(
 						ctx.label(component),
@@ -64,6 +69,9 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 		}
 	} else {
 		for _, component := range ctx.World.Components {
+			if ctx.Skip(component) {
+				continue
+			}
 			write("\t%s %v;\n", ctx.id(component),
 				attrs(
 					ctx.label(component),
@@ -76,7 +84,14 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 	write("\n")
 
 	for _, source := range ctx.World.Components {
+		if ctx.Skip(source) {
+			continue
+		}
 		for _, dep := range source.Deps {
+			if ctx.Skip(dep.Dep) {
+				continue
+			}
+
 			write("\t%s -> %s %v;\n", ctx.id(source), ctx.id(dep.Dep),
 				attrs(
 					ctx.color(dep.Dep),

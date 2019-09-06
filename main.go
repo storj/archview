@@ -21,9 +21,11 @@ func main() {
 	outname := flag.String("out", "", "output file")
 
 	var options graph.Options
+	options.Clustering = graph.ClusterByClass
 	flag.StringVar(&options.TrimPrefix, "trim-prefix", "", "trim label prefix")
 	flag.BoolVar(&options.NoColor, "nocolor", false, "disable coloring (dot only)")
 	flag.Var(&options.Clustering, "cluster", "clustering mode (dot only)")
+	flag.Var(&options.SkipClasses, "skip-class", "skip components with the specified class in output")
 
 	flag.Parse()
 
@@ -70,6 +72,11 @@ func main() {
 		}).WriteTo(out)
 	case "graphml":
 		_, err = (&graph.GraphML{
+			World:   world,
+			Options: options,
+		}).WriteTo(out)
+	case "elk":
+		_, err = (&graph.ELK{
 			World:   world,
 			Options: options,
 		}).WriteTo(out)

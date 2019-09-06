@@ -47,6 +47,10 @@ func (ctx *GraphML) graph() *graphml.Graph {
 	out.EdgeDefault = graphml.Directed
 
 	for _, component := range ctx.World.Components {
+		if ctx.Skip(component) {
+			continue
+		}
+
 		outnode := graphml.Node{}
 		outnode.ID = ctx.id(component)
 
@@ -63,10 +67,17 @@ func (ctx *GraphML) graph() *graphml.Graph {
 		out.Node = append(out.Node, outnode)
 	}
 
-	for _, src := range ctx.World.Components {
-		for _, dep := range src.Deps {
+	for _, source := range ctx.World.Components {
+		if ctx.Skip(source) {
+			continue
+		}
+		for _, dep := range source.Deps {
+			if ctx.Skip(dep.Dep) {
+				continue
+			}
+
 			outedge := graphml.Edge{}
-			outedge.Source = ctx.id(src)
+			outedge.Source = ctx.id(source)
 			outedge.Target = ctx.id(dep.Dep)
 
 			addAttr(&outedge.Attrs, "tooltip", dep.Path)
@@ -78,18 +89,7 @@ func (ctx *GraphML) graph() *graphml.Graph {
 }
 
 func (ctx *GraphML) id(component *arch.Component) string {
-	return strings.Map(func(r rune) rune {
-		switch {
-		case 'a' <= r && r <= 'z':
-			return r
-		case 'A' <= r && r <= 'Z':
-			return r
-		case '0' <= r && r <= '9':
-			return r
-		default:
-			return '_'
-		}
-	}, component.Name())
+	return sanitize(component.Name())
 }
 
 func (ctx *GraphML) href(component *arch.Component) string {
