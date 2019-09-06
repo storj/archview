@@ -30,13 +30,13 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 
 	write("digraph G {\n")
 	write("\trankdir=LR;\n")
-	write("\tranksep=2 equally;\n")
+	write("\tranksep=3;\n")
 
 	if ctx.NoColor {
-		write("\tnode [shape=record target=\"_graphviz\"];\n")
+		write("\tnode [width=3 shape=record target=\"_graphviz\"];\n")
 		write("\tedge [];\n")
 	} else {
-		write("\tnode [penwidth=2 shape=record target=\"_graphviz\" style=filled fillcolor=white];\n")
+		write("\tnode [penwidth=2 width=3 shape=record target=\"_graphviz\" style=filled fillcolor=white];\n")
 		write("\tedge [penwidth=2];\n")
 	}
 
