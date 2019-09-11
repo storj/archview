@@ -1,10 +1,15 @@
-on: [push, pull_request]
+on: 
+  push:
+    branches:
+      - master
+  pull_request:
+
 name: Go
 jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.12.9, 1.13]
+        go-version: [1.13]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -38,10 +43,13 @@ jobs:
       env:
         GO111MODULE: off
       run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
         go get -u github.com/myitcv/gobin
 
     - name: Checkout code
       uses: actions/checkout@v1
 
     - name: staticcheck
-      run: gobin -run honnef.co/go/tools/cmd/staticcheck@2019.2.3 -checks all ./...
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        gobin -run honnef.co/go/tools/cmd/staticcheck@2019.2.3 -checks all ./...
