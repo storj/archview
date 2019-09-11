@@ -1,12 +1,13 @@
 package main_test
 
 import (
-	"bytes"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestBasic(t *testing.T) {
@@ -52,9 +53,8 @@ func TestBasic(t *testing.T) {
 				t.Fatalf("failed to read expected: %v", err)
 			}
 
-			if !bytes.Equal(got, expected) {
-				t.Logf("expected:\n%s", expected)
-				t.Logf("got     :\n%s", got)
+			if diff := cmp.Diff(expected, got); diff != "" {
+				t.Error(diff)
 				t.Fatal("output does not match the expectation")
 			}
 		})
