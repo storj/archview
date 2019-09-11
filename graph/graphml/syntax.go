@@ -1,3 +1,4 @@
+// Package graphml contains XML definitions for graphml format.
 package graphml
 
 import "encoding/xml"

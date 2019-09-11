@@ -1,3 +1,4 @@
+// Package arch implements gathering component information and links.
 package arch
 
 import (
