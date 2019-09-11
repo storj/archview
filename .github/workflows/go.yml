@@ -1,5 +1,5 @@
 on: [push, pull_request]
-name: Test
+name: Go
 jobs:
   test:
     strategy:
@@ -25,3 +25,23 @@ jobs:
 
     - name: Test
       run: go test -v -race ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+
+    - name: Install Tools
+      env:
+        GO111MODULE: off
+      run: |
+        go get -u github.com/myitcv/gobin
+
+    - name: Checkout code
+      uses: actions/checkout@v1
+
+    - name: staticcheck
+      run: gobin -run honnef.co/go/tools/cmd/staticcheck@2019.2.3 -checks all ./...
