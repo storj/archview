@@ -38,6 +38,7 @@ jobs:
       env:
         GO111MODULE: off
       run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
         go get -u github.com/myitcv/gobin
 
     - name: Checkout code
