@@ -1,3 +1,4 @@
+// Package edit implements different arch graph utilities.
 package edit
 
 import "github.com/storj/archview/arch"
