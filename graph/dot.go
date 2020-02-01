@@ -54,9 +54,6 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 			write("\t\tlabel=%q;\n\n", class)
 			write("\t\tbgcolor=gray98; pencolor=gray80; fontsize=10;\n\n")
 			for _, component := range components {
-				if ctx.Skip(component) {
-					continue
-				}
 				write("\t\t%s %v;\n", ctx.id(component),
 					attrs(
 						ctx.label(component),
@@ -69,9 +66,6 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 		}
 	} else {
 		for _, component := range ctx.World.Components {
-			if ctx.Skip(component) {
-				continue
-			}
 			write("\t%s %v;\n", ctx.id(component),
 				attrs(
 					ctx.label(component),
@@ -84,14 +78,7 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 	write("\n")
 
 	for _, source := range ctx.World.Components {
-		if ctx.Skip(source) {
-			continue
-		}
 		for _, link := range source.Links {
-			if ctx.Skip(link.Target) {
-				continue
-			}
-
 			write("\t%s -> %s %v;\n", ctx.id(source), ctx.id(link.Target),
 				attrs(
 					ctx.color(link.Target),

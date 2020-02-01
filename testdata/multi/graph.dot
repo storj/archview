@@ -11,4 +11,7 @@ graph G {
 	"example/site.Site" -> "example/site/user.Service";
 	"example/site.Site" -> "example/site/comment.Endpoint";
 	"example/site.Site" -> "example/site/comment.Service";
+	"example/site.ServiceOnly" -> "example/site.DB";
+	"example/site.ServiceOnly" -> "example/site/user.Service";
+	"example/site.ServiceOnly" -> "example/site/comment.Service";
 }

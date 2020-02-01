@@ -49,10 +49,6 @@ func (ctx *GraphML) graph() *graphml.Graph {
 	out.EdgeDefault = graphml.Directed
 
 	for _, component := range ctx.World.Components {
-		if ctx.Skip(component) {
-			continue
-		}
-
 		outnode := graphml.Node{}
 		outnode.ID = ctx.id(component)
 
@@ -70,14 +66,7 @@ func (ctx *GraphML) graph() *graphml.Graph {
 	}
 
 	for _, source := range ctx.World.Components {
-		if ctx.Skip(source) {
-			continue
-		}
 		for _, link := range source.Links {
-			if ctx.Skip(link.Target) {
-				continue
-			}
-
 			outedge := graphml.Edge{}
 			outedge.Source = ctx.id(source)
 			outedge.Target = ctx.id(link.Target)

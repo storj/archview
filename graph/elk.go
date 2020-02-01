@@ -30,23 +30,13 @@ func (ctx *ELK) WriteTo(w io.Writer) (n int64, err error) {
 	write("algorithm: layered\n\n")
 
 	for _, source := range ctx.World.Components {
-		if ctx.Skip(source) {
-			continue
-		}
 		write("node %v\n", sanitize(strings.TrimPrefix(source.Name(), ctx.TrimPrefix)))
 	}
 
 	write("\n")
 
 	for _, source := range ctx.World.Components {
-		if ctx.Skip(source) {
-			continue
-		}
 		for _, link := range source.Links {
-			if ctx.Skip(link.Target) {
-				continue
-			}
-
 			write("edge %v -> %v\n",
 				sanitize(strings.TrimPrefix(source.Name(), ctx.TrimPrefix)),
 				sanitize(strings.TrimPrefix(link.Target.Name(), ctx.TrimPrefix)),

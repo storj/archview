@@ -31,14 +31,7 @@ func (ctx *DotBasic) WriteTo(w io.Writer) (n int64, err error) {
 	defer write("}\n")
 
 	for _, source := range ctx.World.Components {
-		if ctx.Skip(source) {
-			continue
-		}
 		for _, link := range source.Links {
-			if ctx.Skip(link.Target) {
-				continue
-			}
-
 			write("\t%q -> %q;\n", strings.TrimPrefix(source.Name(), ctx.TrimPrefix), strings.TrimPrefix(link.Target.Name(), ctx.TrimPrefix))
 		}
 	}

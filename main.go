@@ -11,6 +11,7 @@ import (
 	"golang.org/x/tools/go/packages"
 
 	"github.com/storj/archview/arch"
+	"github.com/storj/archview/edit"
 	"github.com/storj/archview/graph"
 )
 
@@ -20,12 +21,16 @@ func main() {
 	format := flag.String("format", "", "format for output (dot, dot-basic, graphml, elk)")
 	outname := flag.String("out", "", "output file")
 
+	var skipClasses Strings
+	var roots Strings
+	flag.Var(&skipClasses, "skip-class", "skip components with the specified class in output")
+	flag.Var(&roots, "root", "only display components that are dependencies of root")
+
 	var options graph.Options
 	options.Clustering = graph.ClusterByClass
 	flag.StringVar(&options.TrimPrefix, "trim-prefix", "", "trim label prefix")
 	flag.BoolVar(&options.NoColor, "nocolor", false, "disable coloring (dot only)")
 	flag.Var(&options.Clustering, "cluster", "clustering mode (dot only)")
-	flag.Var(&options.SkipClasses, "skip-class", "skip components with the specified class in output")
 
 	flag.Parse()
 
@@ -43,9 +48,15 @@ func main() {
 	}
 
 	world := arch.Analyze(pkgs...)
-
 	if *format == "" {
 		*format = strings.TrimPrefix(filepath.Ext(*outname), ".")
+	}
+
+	if !roots.Empty() {
+		edit.KeepRoots(world, roots)
+	}
+	if !skipClasses.Empty() {
+		edit.RemoveClasses(world, skipClasses)
 	}
 
 	var out io.Writer = os.Stdout
