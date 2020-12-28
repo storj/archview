@@ -5,7 +5,7 @@ import (
 	"example/site/user"
 )
 
-// DB is the master database that provides access to all databases.
+// DB is the main database that provides access to all databases.
 // architecture: Database
 type DB interface {
 	Users() user.Repo

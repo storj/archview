@@ -5,7 +5,7 @@ import (
 	"example/site/user"
 )
 
-// DB implements postgres implementation of the master database.
+// DB implements postgres implementation of the main database.
 //
 // architecture: Database
 type DB struct {
