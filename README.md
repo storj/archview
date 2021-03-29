@@ -59,12 +59,12 @@ With a tool like [yEd](https://yed.yworks.com) we can try different ways of visu
 
 ![Prettier Diagram](testdata/basic/graph-yed.svg)
 
-## Tools
+## Install
 
 To install archview run:
 
 ```
-go get -u github.com/storj/archview
+go install github.com/storj/archview@latest
 ```
 
 You'll also need a tool to layout the graph, for example:
