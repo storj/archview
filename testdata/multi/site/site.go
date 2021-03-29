@@ -34,10 +34,10 @@ type ServiceOnly struct {
 	DB DB
 
 	User struct {
-		Service  *user.Service
+		Service *user.Service
 	}
 
 	Comment struct {
-		Service  *comment.Service
+		Service *comment.Service
 	}
 }
