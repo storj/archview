@@ -9,7 +9,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.13]
+        go-version: [1.15]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -37,7 +37,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v1
       with:
-        go-version: 1.13
+        go-version: 1.15
 
     - name: Install Tools
       env:

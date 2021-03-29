@@ -1,6 +1,6 @@
 module github.com/storj/archview
 
-go 1.12
+go 1.15
 
 require (
 	github.com/google/go-cmp v0.3.1
