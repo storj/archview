@@ -92,6 +92,7 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 					ctx.color(link.Target),
 					ctx.edgetooltip(source, link),
 					ctx.linkStyle(link),
+					ctx.linkLabel(link),
 				))
 		}
 		if len(source.Links) > 0 {
@@ -119,6 +120,13 @@ func (ctx *Dot) linkStyle(link *arch.Link) string {
 		return "style=dashed"
 	}
 	return ""
+}
+
+func (ctx *Dot) linkLabel(link *arch.Link) string {
+	if link.Label == "" {
+		return ""
+	}
+	return fmt.Sprintf("label=%q", link.Label)
 }
 
 func (ctx *Dot) id(component *arch.Component) string {

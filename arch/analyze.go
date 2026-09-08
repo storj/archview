@@ -2,6 +2,7 @@
 package arch
 
 import (
+	"errors"
 	"go/ast"
 	"go/types"
 
@@ -10,12 +11,14 @@ import (
 )
 
 type analysis struct {
-	pkgs  []*packages.Package
-	world *World
+	pkgs   []*packages.Package
+	world  *World
+	links  []explicitLink
+	errors []error
 }
 
 // Analyze analyzes packages and extracts architecture annotations and relations.
-func Analyze(pkgs ...*packages.Package) *World {
+func Analyze(pkgs ...*packages.Package) (*World, error) {
 	a := &analysis{
 		pkgs:  pkgs,
 		world: NewWorld(),
@@ -28,8 +31,13 @@ func Analyze(pkgs ...*packages.Package) *World {
 	}
 
 	packages.Visit(pkgs, a.addImpls, nil)
+	packages.Visit(pkgs, a.addAnnotations, nil)
+	a.resolveLinks()
+	if err := errors.Join(a.errors...); err != nil {
+		return nil, err
+	}
 
-	return a.world
+	return a.world, nil
 }
 
 func (a *analysis) addComponents(pkg *packages.Package) bool {

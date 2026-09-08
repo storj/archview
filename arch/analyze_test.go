@@ -12,6 +12,15 @@ import (
 
 func analyzeSource(t *testing.T, source string) *World {
 	t.Helper()
+	world, err := Analyze(parsePackage(t, "example", source))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return world
+}
+
+func parsePackage(t *testing.T, path, source string) *packages.Package {
+	t.Helper()
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "example.go", source, parser.ParseComments)
 	if err != nil {
@@ -22,11 +31,11 @@ func analyzeSource(t *testing.T, source string) *World {
 		Uses:  make(map[*ast.Ident]types.Object),
 		Types: make(map[ast.Expr]types.TypeAndValue),
 	}
-	pkg, err := (&types.Config{}).Check("example", fset, []*ast.File{file}, info)
+	pkg, err := (&types.Config{}).Check(path, fset, []*ast.File{file}, info)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return Analyze(&packages.Package{Types: pkg, TypesInfo: info, Syntax: []*ast.File{file}})
+	return &packages.Package{ID: path, PkgPath: path, Fset: fset, Types: pkg, TypesInfo: info, Syntax: []*ast.File{file}}
 }
 
 func TestAnnotatedAliasIdentity(t *testing.T) {

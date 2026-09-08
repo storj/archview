@@ -61,7 +61,10 @@ func main() {
 		log.Fatal("no packages matched")
 	}
 
-	world := arch.Analyze(pkgs...)
+	world, err := arch.Analyze(pkgs...)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if !roots.Empty() {
 		if err := edit.KeepRoots(world, roots); err != nil {

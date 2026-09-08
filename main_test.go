@@ -58,6 +58,29 @@ func TestBasic(t *testing.T) {
 		})
 	}
 
+	t.Run("invalid relationship preserves output", func(t *testing.T) {
+		dir := t.TempDir()
+		for name, body := range map[string]string{
+			"go.mod":    "module example\n\ngo 1.27\n",
+			"main.go":   "package example\n// architecture: Service\ntype Service struct{}\n// architecture:link Service -> Typo\n",
+			"graph.dot": "existing output",
+		} {
+			if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}
+		run := exec.Command(archviewexe, "-out", "graph.dot", "./...")
+		run.Dir = dir
+		output, err := run.CombinedOutput()
+		if err == nil || !strings.Contains(string(output), "main.go:4:") || !strings.Contains(string(output), "Typo") {
+			t.Fatalf("expected positioned endpoint error: %v\n%s", err, output)
+		}
+		got, err := os.ReadFile(filepath.Join(dir, "graph.dot"))
+		if err != nil || string(got) != "existing output" {
+			t.Fatalf("output changed: %q, %v", got, err)
+		}
+	})
+
 	matches, err := filepath.Glob("testdata/*")
 	if err != nil {
 		t.Fatal(err)

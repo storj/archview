@@ -85,6 +85,10 @@ func (ctx *GraphML) graph() *graphml.Graph {
 			outedge.Target = ctx.id(link.Target)
 
 			addAttr(&outedge.Attrs, "tooltip", link.Path)
+			addAttr(&outedge.Attrs, "label", link.Label)
+			if link.Explicit {
+				addAttr(&outedge.Attrs, "relation", "explicit")
+			}
 			if link.Implementation {
 				addAttr(&outedge.Attrs, "relation", "implementation")
 			}

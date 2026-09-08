@@ -23,6 +23,9 @@ type Component struct {
 type Link struct {
 	Path   string
 	Target *Component
+	// Label describes an explicit relationship, independently of inferred field paths.
+	Label    string
+	Explicit bool
 
 	Implementation bool
 }

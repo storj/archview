@@ -3,6 +3,7 @@ package arch
 import (
 	"go/ast"
 	"strings"
+	"unicode"
 )
 
 // ExtractAnnotation extracts architecture annotations from a type definition.
@@ -16,8 +17,12 @@ func ExtractAnnotation(gen *ast.GenDecl, ts *ast.TypeSpec) (comment, tag string,
 				tag := after
 
 				var group ast.CommentGroup
-				group.List = append(group.List, doc.List[:i]...)
-				group.List = append(group.List, doc.List[i+1:]...)
+				for j, other := range doc.List {
+					kind, _ := annotationDirective(other.Text)
+					if j != i && kind != "link" && kind != "resource" {
+						group.List = append(group.List, other)
+					}
+				}
 
 				return group.Text(), strings.TrimSpace(tag), true
 			}
@@ -25,4 +30,16 @@ func ExtractAnnotation(gen *ast.GenDecl, ts *ast.TypeSpec) (comment, tag string,
 	}
 
 	return "", "", false
+}
+
+func annotationDirective(text string) (kind, body string) {
+	rest, ok := strings.CutPrefix(text, "// architecture:")
+	if !ok {
+		return "", ""
+	}
+	i := strings.IndexFunc(rest, unicode.IsSpace)
+	if i < 0 {
+		return rest, ""
+	}
+	return rest[:i], strings.TrimSpace(rest[i:])
 }

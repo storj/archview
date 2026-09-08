@@ -144,3 +144,27 @@ methods merely because their receiver is annotated.
 Assignments between identical interface types (including aliases) do not create
 implementation links. Repeated assertions for the same component pair produce
 one implementation link, independently of any ordinary dependency links.
+
+## Explicit relationships
+
+Use a standalone line comment to describe a relationship that Go type references
+do not express:
+
+```go
+// architecture:link Client -> Server : sends requests
+// architecture:link Server -> example/worker.Worker : dispatches jobs
+```
+
+The syntax is `// architecture:link Source -> Target` with an optional `: label`.
+Separate the arrow and colon from endpoint names with spaces. Labels may contain
+multiple words. A bare type name refers to an annotated type in the comment's
+package; a qualified name uses the full import path followed by the type name.
+Use generic declaration names without type parameters, such as `Cache`.
+
+Both endpoints must be annotated components in the loaded packages. Forward
+references and cycles are supported. Identical explicit links are deduplicated;
+different labels and inferred dependencies remain separate. Malformed directives,
+unknown endpoints, and ambiguous names report source locations and stop output.
+
+Explicit links participate in root selection and class filtering. DOT and GraphML
+include relationship labels; ELK retains the connections without labels.

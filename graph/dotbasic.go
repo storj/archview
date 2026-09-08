@@ -48,7 +48,11 @@ func (ctx *DotBasic) WriteTo(w io.Writer) (n int64, err error) {
 
 	for _, source := range ctx.World.Components {
 		for _, link := range source.Links {
-			write("\t%q -> %q;\n", source.Name(), link.Target.Name())
+			if link.Label != "" {
+				write("\t%q -> %q [label=%q];\n", source.Name(), link.Target.Name(), link.Label)
+			} else {
+				write("\t%q -> %q;\n", source.Name(), link.Target.Name())
+			}
 		}
 	}
 	return n, err

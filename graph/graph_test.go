@@ -92,6 +92,7 @@ func TestGraphMLKeysAndIdentity(t *testing.T) {
 	a := component("example/a-b", "Node")
 	b := component("example/a_b", "Node")
 	a.Add(arch.NewLink("field <&>", b))
+	a.Add(&arch.Link{Target: b, Explicit: true, Label: "sends <requests> & events"})
 	world := &arch.World{Components: []*arch.Component{a, b}}
 	var out bytes.Buffer
 	if _, err := (&GraphML{World: world}).WriteTo(&out); err != nil {
@@ -116,6 +117,18 @@ func TestGraphMLKeysAndIdentity(t *testing.T) {
 		}
 	}
 	g := file.Graphs[0]
+	if len(g.Edge) != 2 {
+		t.Fatalf("expected dependency and explicit link, got %d edges", len(g.Edge))
+	}
+	foundLabel := false
+	for _, attr := range g.Edge[1].Attrs {
+		if attr.Key == "label" && strings.Contains(string(attr.Value), "sends &lt;requests&gt; &amp; events") {
+			foundLabel = true
+		}
+	}
+	if !foundLabel {
+		t.Error("explicit relationship label was not escaped and retained")
+	}
 	if len(g.Node) != 2 || g.Node[0].ID == g.Node[1].ID {
 		t.Fatalf("expected two distinct nodes: %+v", g.Node)
 	}
