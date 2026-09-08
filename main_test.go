@@ -81,6 +81,45 @@ func TestBasic(t *testing.T) {
 		}
 	})
 
+	t.Run("client server relationships", func(t *testing.T) {
+		for _, format := range []string{"dot", "dot-basic", "graphml", "elk"} {
+			t.Run(format, func(t *testing.T) {
+				run := exec.Command(archviewexe, "-format", format, "-root", "example/network/client.Client", "./...")
+				run.Dir = "testdata/network"
+				output, err := run.CombinedOutput()
+				if err != nil {
+					t.Fatalf("failed to generate relationships: %v\n%s", err, output)
+				}
+				for _, name := range []string{"Client", "Server", "payments"} {
+					if !strings.Contains(string(output), name) {
+						t.Errorf("missing %s in %s", name, output)
+					}
+				}
+				if strings.Contains(string(output), "metrics") {
+					t.Fatalf("unrelated resource survived root filter: %s", output)
+				}
+				if format != "elk" && !strings.Contains(string(output), "sends requests") {
+					t.Fatalf("missing relationship label: %s", output)
+				}
+				if format == "dot" || format == "dot-basic" {
+					if dot, err := exec.LookPath("dot"); err == nil {
+						render := exec.Command(dot, "-Tsvg")
+						render.Stdin = strings.NewReader(string(output))
+						if out, err := render.CombinedOutput(); err != nil {
+							t.Fatalf("Graphviz rejected relationships: %v\n%s", err, out)
+						}
+					}
+				}
+			})
+		}
+		run := exec.Command(archviewexe, "-format", "dot-basic", "-root", "example/network/client.Client", "-skip-class", "Remote Service", "./...")
+		run.Dir = "testdata/network"
+		output, err := run.CombinedOutput()
+		if err != nil || strings.Contains(string(output), "external:") || !strings.Contains(string(output), "pushes events") {
+			t.Fatalf("class filter did not preserve internal client/server cycle: %v\n%s", err, output)
+		}
+	})
+
 	matches, err := filepath.Glob("testdata/*")
 	if err != nil {
 		t.Fatal(err)

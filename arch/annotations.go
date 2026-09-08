@@ -13,6 +13,10 @@ func ExtractAnnotation(gen *ast.GenDecl, ts *ast.TypeSpec) (comment, tag string,
 			continue
 		}
 		for i, c := range doc.List {
+			kind, _ := annotationDirective(c.Text)
+			if kind == "link" || kind == "resource" {
+				continue
+			}
 			if after, ok0 := strings.CutPrefix(c.Text, "// architecture:"); ok0 {
 				tag := after
 

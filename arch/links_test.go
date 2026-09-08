@@ -27,6 +27,12 @@ type Server struct{}
 	if len(world.Components) != 3 {
 		t.Fatalf("expected three components: %s", world)
 	}
+	if world.Components[0].Class != "Client" {
+		t.Fatalf("link directive was mistaken for the component class: %q", world.Components[0].Class)
+	}
+	if strings.Contains(world.Components[0].Comment, "architecture:") {
+		t.Fatalf("annotation leaked into documentation: %q", world.Components[0].Comment)
+	}
 	links := world.Components[0].Links
 	if len(links) != 2 || links[0].Target != world.Components[2] || links[0].Label != "sends requests" || !links[0].Explicit || links[1].Target != world.Components[1] {
 		t.Fatalf("incorrect explicit links: %+v", links)

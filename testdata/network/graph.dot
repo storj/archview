@@ -1,0 +1,6 @@
+digraph G {
+	"external:metrics";
+	"example/network/client.Client" -> "example/network/server.Server" [label="sends requests"];
+	"example/network/client.Client" -> "external:payments-api" [label="HTTPS"];
+	"example/network/server.Server" -> "example/network/client.Client" [label="pushes events"];
+}

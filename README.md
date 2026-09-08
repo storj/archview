@@ -197,3 +197,32 @@ are errors, so a misspelled target cannot silently create a new node.
 External resources appear in every output format, without Go documentation URLs.
 Use `-root external:users` to select a resource, or `-skip-class 'Database Table'`
 to hide tables. See [the database/table example](testdata/tables/db.go).
+
+### Clients and servers
+
+Link a client to an annotated server by its full import path, or to a declared
+external service when the server's code is not loaded:
+
+```go
+// architecture: Client
+type Client struct{}
+
+// architecture:link Client -> example/network/server.Server : sends requests
+// architecture:resource external:payments-api : Remote Service
+// architecture:link Client -> external:payments-api : HTTPS
+```
+
+An arrow expresses the direction you specify; no reverse link is inferred. Add
+`Server -> example/network/client.Client : pushes events` in the server's package
+as another `architecture:link` directive to show traffic in both directions.
+
+The [client/server example](testdata/network) includes both kinds of endpoint,
+a reverse event link, and an unrelated external service. From that directory:
+
+```sh
+archview -root example/network/client.Client ./... | dot -Tsvg > network.svg
+archview -root example/network/client.Client -skip-class 'Remote Service' ./...
+```
+
+The first command retains the client, server, and payments API. The second hides
+the remote API while preserving both links between the client and server.
