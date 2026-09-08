@@ -6,7 +6,9 @@ ArchView is a tool for creating and inspecting Go program architecture based on 
 
 To start using, add annotations like so:
 
-```
+```go
+package example
+
 // architecture: Database
 type DB interface {
 	Query() string
@@ -14,13 +16,13 @@ type DB interface {
 
 // architecture: Service
 type Users struct {
-	db       *DB
+	db       DB
 	comments *Comments
 }
 
 // architecture: Service
 type Comments struct {
-	db    *DB
+	db    DB
 	users *Users
 }
 
@@ -37,8 +39,12 @@ var _ DB = (*SqliteDB)(nil)
 // architecture: Database Implementation
 type PostgresDB struct{}
 
+func (*PostgresDB) Query() string { return "postgres" }
+
 // architecture: Database Implementation
 type SqliteDB struct{}
+
+func (*SqliteDB) Query() string { return "sqlite" }
 ```
 
 When we run the tool to output a graphviz `dot` file:
@@ -75,5 +81,58 @@ You'll also need a tool to layout the graph, for example:
 Running the tool outputs the graph definition:
 
 ```
-archview [-format (dot|dot-basic|graphml)] [-out <output file>] [packages]
+archview [-format (dot|dot-basic|graphml|elk)] [-out <output file>] [packages]
 ```
+
+## Output and filtering
+
+By default, ArchView writes DOT to standard output. `-out graph.graphml` selects
+GraphML from the file extension; an explicit `-format` takes precedence.
+`dot` includes styling and class clusters, `dot-basic` produces a minimal directed
+graph, `graphml` includes metadata and yEd labels, and `elk` produces ELK text.
+
+| Flag | Behavior |
+| --- | --- |
+| `-root example.Server` | Keep the named component and its transitive dependencies. Unknown names produce an error listing available components. |
+| `-skip-class Service` | Remove components of the given class and links to them. Applied after root selection. |
+| `-trim-prefix example.` | Shorten displayed names without merging distinct components. |
+| `-cluster class` | Group DOT nodes by class (the default). Use `-cluster=''` to disable grouping. |
+| `-nocolor` | Disable DOT coloring. |
+
+`-root` and `-skip-class` accept repeated flags or comma-separated values.
+Root names use fully qualified type names, before prefix trimming. Quote names
+containing spaces. For example, with module path `example`:
+
+```sh
+archview -root example.Server -skip-class 'Database Implementation' -trim-prefix example. ./...
+archview -cluster='' -nocolor ./... | dot -Tsvg > graph.svg
+archview -format elk -out graph.elkt ./...
+```
+
+Package errors and invalid options are reported before the output file is opened.
+File output is written to a temporary file in the destination directory, synced,
+and closed before replacing the destination using a rename. Replacement is atomic
+on platforms that support atomic file renames. Existing file permissions are
+preserved; new files are private to the current user on Unix. Symlinks and other
+non-regular destinations are rejected. Standard output is streamed directly.
+
+## Dependency rules
+
+Place `// architecture: Class` above a type declaration or an individual type
+inside a grouped declaration. A group annotation applies to its types unless a
+type has its own annotation.
+
+ArchView follows struct fields, including nested unannotated structs, aliases,
+multiple pointer levels, arrays, slices, channel elements, and both map keys and
+values. It also follows parameters and results of interface methods and function
+types, including callback fields and variadic parameters.
+
+Generic instances link to the annotated generic declaration: a field of type
+`*Cache[int]` links to `Cache[T]`. Traversal stops when an annotated component is
+reached. Repeated references to the same target along the same field or method
+path produce one dependency link; separate fields remain separate links.
+
+Explicit interface assignments such as `var _ DB = (*PostgresDB)(nil)` create
+implementation links. ArchView does not infer every possible interface
+implementation, analyze function bodies as call graphs, or inspect concrete
+methods merely because their receiver is annotated.
