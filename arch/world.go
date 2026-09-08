@@ -21,17 +21,31 @@ func NewWorld() *World {
 
 // Add adds a new component to world.
 func (world *World) Add(n *Component) {
-	world.ByType[types.Unalias(n.Type)] = n
+	world.ByType[n.Type] = n
 	world.Components = append(world.Components, n)
 }
 
-// componentFor resolves aliases, pointers, and generic instances to a declaration.
+// componentFor preserves annotated aliases and resolves unannotated aliases,
+// pointers, and generic instances to their component declarations.
 func (world *World) componentFor(typ types.Type) *Component {
-	typ = tryDeref(typ)
-	if named, ok := typ.(*types.Named); ok {
-		typ = named.Origin()
+	for {
+		if component := world.ByType[typ]; component != nil {
+			return component
+		}
+		switch t := typ.(type) {
+		case *types.Alias:
+			if component := world.ByType[t.Origin()]; component != nil {
+				return component
+			}
+			typ = t.Rhs()
+		case *types.Pointer:
+			typ = t.Elem()
+		case *types.Named:
+			return world.ByType[t.Origin()]
+		default:
+			return nil
+		}
 	}
-	return world.ByType[typ]
 }
 
 // String creates a short description of the world that is useful for debugging.

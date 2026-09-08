@@ -156,14 +156,3 @@ func (a *analysis) includeDependency(source *Component, path string, typ types.T
 	}
 	a.includeLinks(source, path, typ, visiting)
 }
-
-func tryDeref(t types.Type) types.Type {
-	t = types.Unalias(t)
-	for {
-		ptr, ok := t.(*types.Pointer)
-		if !ok {
-			return t
-		}
-		t = types.Unalias(ptr.Elem())
-	}
-}

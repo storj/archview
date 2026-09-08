@@ -132,6 +132,10 @@ Generic instances link to the annotated generic declaration: a field of type
 reached. Repeated references to the same target along the same field or method
 path produce one dependency link; separate fields remain separate links.
 
+An annotated alias is a separate component: references to that alias link to it,
+while references to the original type keep linking to the original component.
+Unannotated aliases resolve to their targets. This also applies to generic aliases.
+
 Explicit interface assignments such as `var _ DB = (*PostgresDB)(nil)` create
 implementation links. ArchView does not infer every possible interface
 implementation, analyze function bodies as call graphs, or inspect concrete

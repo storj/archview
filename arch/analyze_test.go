@@ -29,6 +29,49 @@ func analyzeSource(t *testing.T, source string) *World {
 	return Analyze(&packages.Package{Types: pkg, TypesInfo: info, Syntax: []*ast.File{file}})
 }
 
+func TestAnnotatedAliasIdentity(t *testing.T) {
+	const service = "// architecture: Service\ntype Service struct{}\n"
+	const alias = "// architecture: Alias\ntype Alias = Service\n"
+	for _, declarations := range []string{service + alias, alias + service} {
+		world := analyzeSource(t, "package example\n"+declarations+`
+type Unannotated = Service
+type ThroughAlias = Alias
+// architecture: Pointer
+type Pointer = *Service
+// architecture: Cache
+type Cache[T any] struct{}
+// architecture: GenericAlias
+type GenericAlias[T any] = Cache[T]
+type UnannotatedGeneric[T any] = Cache[T]
+// architecture: Server
+type Server struct {
+ Direct *Service
+ Alias **Alias
+ Plain Unannotated
+ Chained ThroughAlias
+ Pointer Pointer
+ Generic *GenericAlias[int]
+ PlainGeneric UnannotatedGeneric[string]
+}
+`)
+		var server *Component
+		for _, c := range world.Components {
+			if c.ShortName() == "Server" {
+				server = c
+			}
+		}
+		want := []string{"Service", "Alias", "Service", "Alias", "Pointer", "GenericAlias", "Cache"}
+		if server == nil || len(server.Links) != len(want) {
+			t.Fatalf("unexpected dependencies: %s", world)
+		}
+		for i, target := range want {
+			if got := server.Links[i].Target.ShortName(); got != target {
+				t.Errorf("field %s targets %s, want %s", server.Links[i].Path, got, target)
+			}
+		}
+	}
+}
+
 func TestGroupedAnnotations(t *testing.T) {
 	world := analyzeSource(t, `package example
 type (
