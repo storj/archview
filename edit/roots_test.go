@@ -9,6 +9,29 @@ import (
 	"github.com/storj/archview/arch"
 )
 
+func TestExternalResourceFiltering(t *testing.T) {
+	world := arch.NewWorld()
+	client := &arch.Component{ExternalID: "external:client", Class: "Client"}
+	server := &arch.Component{ExternalID: "external:server", Class: "Server"}
+	table := &arch.Component{ExternalID: "external:table", Class: "Table"}
+	unused := &arch.Component{ExternalID: "external:unused", Class: "Table"}
+	for _, c := range []*arch.Component{client, server, table, unused} {
+		world.Add(c)
+	}
+	client.Add(&arch.Link{Target: server, Explicit: true})
+	server.Add(&arch.Link{Target: table, Explicit: true})
+	if err := KeepRoots(world, []string{"external:client"}); err != nil {
+		t.Fatal(err)
+	}
+	if len(world.Components) != 3 {
+		t.Fatalf("explicit transitive dependencies not retained: %s", world)
+	}
+	RemoveClasses(world, []string{"Table"})
+	if len(world.Components) != 2 || len(server.Links) != 0 || len(client.Links) != 1 || len(world.ByType) != 0 {
+		t.Fatalf("external filtering left inconsistent graph: %s", world)
+	}
+}
+
 func TestKeepRoots(t *testing.T) {
 	world := arch.NewWorld()
 	for _, name := range []string{"A", "B", "C"} {

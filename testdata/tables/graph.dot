@@ -1,0 +1,5 @@
+digraph G {
+	"example/tables.Postgres" -> "external:users" [label="reads and writes"];
+	"example/tables.Postgres" -> "external:comments" [label="reads and writes"];
+	"external:comments" -> "external:users" [label="references"];
+}

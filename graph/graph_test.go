@@ -88,6 +88,42 @@ func TestDotBasicPreservesNodes(t *testing.T) {
 	}
 }
 
+func TestExternalResourceFormats(t *testing.T) {
+	world := arch.NewWorld()
+	resource := &arch.Component{ExternalID: "external:users", Class: "Database Table"}
+	world.Add(resource)
+	for format, renderer := range map[string]io.WriterTo{
+		"dot": &Dot{World: world}, "dot-basic": &DotBasic{World: world},
+		"graphml": &GraphML{World: world}, "elk": &ELK{World: world},
+	} {
+		t.Run(format, func(t *testing.T) {
+			var out bytes.Buffer
+			if _, err := renderer.WriteTo(&out); err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(out.String(), "godoc.org") {
+				t.Fatal("external resource has a Go documentation URL")
+			}
+			if format == "graphml" {
+				var file graphml.File
+				if err := xml.Unmarshal(out.Bytes(), &file); err != nil {
+					t.Fatal(err)
+				}
+				if len(file.Graphs) != 1 || len(file.Graphs[0].Node) != 1 {
+					t.Fatalf("external resource omitted: %s", &out)
+				}
+				for _, attr := range file.Graphs[0].Node[0].Attrs {
+					if attr.Key == "package" || attr.Key == "url" {
+						t.Errorf("external resource has Go-only attribute %q", attr.Key)
+					}
+				}
+			} else if !strings.Contains(out.String(), resource.Name()) && !strings.Contains(out.String(), sanitize(resource.Name())) {
+				t.Fatalf("external resource omitted: %s", &out)
+			}
+		})
+	}
+}
+
 func TestGraphMLKeysAndIdentity(t *testing.T) {
 	a := component("example/a-b", "Node")
 	b := component("example/a_b", "Node")
@@ -121,12 +157,22 @@ func TestGraphMLKeysAndIdentity(t *testing.T) {
 		t.Fatalf("expected dependency and explicit link, got %d edges", len(g.Edge))
 	}
 	foundLabel := false
+	foundYedLabel := false
 	for _, attr := range g.Edge[1].Attrs {
 		if attr.Key == "label" && strings.Contains(string(attr.Value), "sends &lt;requests&gt; &amp; events") {
 			foundLabel = true
 		}
+		if attr.Key == "yedgelabel" {
+			var graphics struct {
+				Label string `xml:"EdgeLabel"`
+			}
+			if err := xml.Unmarshal(attr.Value, &graphics); err != nil {
+				t.Fatal(err)
+			}
+			foundYedLabel = graphics.Label == "sends <requests> & events"
+		}
 	}
-	if !foundLabel {
+	if !foundLabel || !foundYedLabel {
 		t.Error("explicit relationship label was not escaped and retained")
 	}
 	if len(g.Node) != 2 || g.Node[0].ID == g.Node[1].ID {

@@ -21,7 +21,9 @@ func NewWorld() *World {
 
 // Add adds a new component to world.
 func (world *World) Add(n *Component) {
-	world.ByType[n.Type] = n
+	if n.Type != nil {
+		world.ByType[n.Type] = n
+	}
 	world.Components = append(world.Components, n)
 }
 

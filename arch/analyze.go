@@ -11,17 +11,19 @@ import (
 )
 
 type analysis struct {
-	pkgs   []*packages.Package
-	world  *World
-	links  []explicitLink
-	errors []error
+	pkgs      []*packages.Package
+	world     *World
+	links     []explicitLink
+	errors    []error
+	resources map[string]*Component
 }
 
 // Analyze analyzes packages and extracts architecture annotations and relations.
 func Analyze(pkgs ...*packages.Package) (*World, error) {
 	a := &analysis{
-		pkgs:  pkgs,
-		world: NewWorld(),
+		pkgs:      pkgs,
+		world:     NewWorld(),
+		resources: make(map[string]*Component),
 	}
 
 	packages.Visit(pkgs, a.addComponents, nil)

@@ -86,6 +86,7 @@ func (ctx *GraphML) graph() *graphml.Graph {
 
 			addAttr(&outedge.Attrs, "tooltip", link.Path)
 			addAttr(&outedge.Attrs, "label", link.Label)
+			addYedEdgeLabelAttr(&outedge.Attrs, link.Label)
 			if link.Explicit {
 				addAttr(&outedge.Attrs, "relation", "explicit")
 			}
@@ -105,6 +106,9 @@ func (ctx *GraphML) id(component *arch.Component) string {
 }
 
 func (ctx *GraphML) href(component *arch.Component) string {
+	if component.Package() == "" {
+		return ""
+	}
 	return "http://godoc.org/" + component.Package() + "#" + component.ShortName()
 }
 
@@ -133,6 +137,17 @@ func addYedLabelAttr(attrs *[]graphml.Attr, key, value string) {
 		Key:   key,
 		Value: buf.Bytes(),
 	})
+}
+
+func addYedEdgeLabelAttr(attrs *[]graphml.Attr, label string) {
+	if label == "" {
+		return
+	}
+	var buf bytes.Buffer
+	buf.WriteString(`<y:PolyLineEdge><y:Arrows source="none" target="standard"/><y:EdgeLabel>`)
+	buf.Write(escapeText(label))
+	buf.WriteString(`</y:EdgeLabel><y:BendStyle smoothed="false"/></y:PolyLineEdge>`)
+	*attrs = append(*attrs, graphml.Attr{Key: "yedgelabel", Value: buf.Bytes()})
 }
 
 func escapeText(s string) []byte {

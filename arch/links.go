@@ -20,7 +20,7 @@ func (a *analysis) addAnnotations(pkg *packages.Package) bool {
 		for _, group := range file.Comments {
 			for _, comment := range group.List {
 				kind, body := annotationDirective(comment.Text)
-				if kind != "link" {
+				if kind != "link" && kind != "resource" {
 					continue
 				}
 				var position token.Position
@@ -28,6 +28,10 @@ func (a *analysis) addAnnotations(pkg *packages.Package) bool {
 					position = pkg.Fset.Position(comment.Pos())
 				}
 				fields := strings.Fields(body)
+				if kind == "resource" {
+					a.addResource(fields, position)
+					continue
+				}
 				if len(fields) < 3 || fields[1] != "->" || (len(fields) > 3 && (len(fields) < 5 || fields[3] != ":")) {
 					a.errors = append(a.errors, fmt.Errorf("%s: expected architecture:link Source -> Target [: label]", position))
 					continue
@@ -43,16 +47,36 @@ func (a *analysis) addAnnotations(pkg *packages.Package) bool {
 	return true
 }
 
+func (a *analysis) addResource(fields []string, position token.Position) {
+	if len(fields) < 3 || fields[1] != ":" || !strings.HasPrefix(fields[0], "external:") || fields[0] == "external:" {
+		a.errors = append(a.errors, fmt.Errorf("%s: expected architecture:resource external:ID : Class", position))
+		return
+	}
+	id, class := fields[0], strings.Join(fields[2:], " ")
+	if existing := a.resources[id]; existing != nil {
+		if existing.Class != class {
+			a.errors = append(a.errors, fmt.Errorf("%s: conflicting classes %q and %q for resource %q", position, existing.Class, class, id))
+		}
+		return
+	}
+	resource := &Component{ExternalID: id, Class: class}
+	a.resources[id] = resource
+	a.world.Add(resource)
+}
+
 func (a *analysis) resolveLinks() {
 	byName := map[string][]*Component{}
 	for _, component := range a.world.Components {
 		// Declaration names also address generic components without type parameters.
 		name := component.Package() + "." + component.ShortName()
+		if component.ExternalID != "" {
+			name = component.Name()
+		}
 		byName[name] = append(byName[name], component)
 	}
 	for _, pending := range a.links {
 		resolve := func(name string) *Component {
-			if !strings.Contains(name, ".") {
+			if !strings.Contains(name, ".") && !strings.HasPrefix(name, "external:") {
 				name = pending.pkg + "." + name
 			}
 			matches := byName[name]
@@ -61,7 +85,7 @@ func (a *analysis) resolveLinks() {
 				if len(matches) > 1 {
 					reason = "ambiguous"
 				}
-				a.errors = append(a.errors, fmt.Errorf("%s: %s architecture link endpoint %q (expected an annotated component)", pending.position, reason, name))
+				a.errors = append(a.errors, fmt.Errorf("%s: %s architecture link endpoint %q (expected an annotated type or declared resource)", pending.position, reason, name))
 				return nil
 			}
 			return matches[0]

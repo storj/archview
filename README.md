@@ -161,10 +161,39 @@ multiple words. A bare type name refers to an annotated type in the comment's
 package; a qualified name uses the full import path followed by the type name.
 Use generic declaration names without type parameters, such as `Cache`.
 
-Both endpoints must be annotated components in the loaded packages. Forward
+Endpoints must be annotated types or declared external resources in the loaded packages. Forward
 references and cycles are supported. Identical explicit links are deduplicated;
 different labels and inferred dependencies remain separate. Malformed directives,
 unknown endpoints, and ambiguous names report source locations and stop output.
 
 Explicit links participate in root selection and class filtering. DOT and GraphML
-include relationship labels; ELK retains the connections without labels.
+include relationship labels (including yEd edge graphics); ELK retains the
+connections without labels. The yEd encoding follows the
+[PolyLineEdge schema](https://www.yworks.com/xml/schema/graphml/1.1/doc/http___www.yworks.com_xml_graphml/element/PolyLineEdge.html).
+
+### External resources and database tables
+
+Declare resources that have no Go type with `architecture:resource`. Resource IDs
+start with `external:` and contain no whitespace. IDs are global across the loaded
+packages; a class may contain spaces. For example:
+
+```go
+// architecture: Database Implementation
+type Postgres struct{}
+
+// architecture:resource external:users : Database Table
+// architecture:resource external:comments : Database Table
+// architecture:link Postgres -> external:users : reads and writes
+// architecture:link Postgres -> external:comments : reads and writes
+// architecture:link external:comments -> external:users : references
+```
+
+Directives may appear anywhere in a Go source file, including a dedicated
+`architecture.go` file. Resources can be either endpoint of a link, and do not
+require wrapper types, imports, or runtime code. Identical declarations share one
+resource; conflicting classes for the same ID are errors. Undeclared resources
+are errors, so a misspelled target cannot silently create a new node.
+
+External resources appear in every output format, without Go documentation URLs.
+Use `-root external:users` to select a resource, or `-skip-class 'Database Table'`
+to hide tables. See [the database/table example](testdata/tables/db.go).

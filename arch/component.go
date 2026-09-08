@@ -9,6 +9,9 @@ import (
 type Component struct {
 	Obj  types.Object
 	Type types.Type
+	// ExternalID names a resource without a Go type (for example external:users).
+	// External resources leave Obj and Type nil.
+	ExternalID string
 
 	// Links contains a list of components that it is linked to
 	Links []*Link
@@ -32,16 +35,25 @@ type Link struct {
 
 // Name returns the fully qualified name of the component.
 func (node *Component) Name() string {
+	if node.ExternalID != "" {
+		return node.ExternalID
+	}
 	return node.Type.String()
 }
 
 // Package returns the package name.
 func (node *Component) Package() string {
+	if node.ExternalID != "" {
+		return ""
+	}
 	return node.Obj.Pkg().Path()
 }
 
 // ShortName returns name without package.
 func (node *Component) ShortName() string {
+	if node.ExternalID != "" {
+		return strings.TrimPrefix(node.ExternalID, "external:")
+	}
 	return node.Obj.Name()
 }
 
