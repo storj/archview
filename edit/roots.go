@@ -2,9 +2,10 @@ package edit
 
 import (
 	"fmt"
-	"github.com/storj/archview/arch"
 	"slices"
 	"strings"
+
+	"github.com/storj/archview/arch"
 )
 
 // Roots returns components without incoming links.
@@ -27,18 +28,39 @@ func Roots(world *arch.World) []*arch.Component {
 }
 
 // KeepRoots keeps roots and their transitive dependencies. Unknown roots return
-// an error without changing the world.
+// an error without changing the world. Each root is first treated as a literal
+// declaration or display name, then as a comma-separated list if no literal matches.
 func KeepRoots(world *arch.World, roots []string) error {
-	known := make(map[string]bool, len(world.Components))
+	known := make(map[string]*arch.Component, len(world.Components))
 	var available []string
 	for _, comp := range world.Components {
-		known[comp.Name()] = true
-		available = append(available, comp.Name())
+		for _, name := range []string{comp.Name(), comp.ReferenceName()} {
+			if previous, exists := known[name]; exists && previous != comp {
+				known[name] = nil // An ambiguous name must not silently select multiple nodes.
+			} else {
+				known[name] = comp
+			}
+		}
+		available = append(available, comp.ReferenceName())
 	}
 	var missing []string
+	var selected []*arch.Component
 	for _, root := range roots {
-		if !known[root] {
-			missing = append(missing, root)
+		root = strings.TrimSpace(root)
+		names := []string{root}
+		if _, literal := known[root]; !literal {
+			names = strings.Split(root, ",")
+		}
+		for _, name := range names {
+			name = strings.TrimSpace(name)
+			comp, exists := known[name]
+			if !exists {
+				missing = append(missing, name)
+			} else if comp == nil {
+				return fmt.Errorf("ambiguous root %q", name)
+			} else {
+				selected = append(selected, comp)
+			}
 		}
 	}
 	if len(missing) > 0 {
@@ -58,10 +80,8 @@ func KeepRoots(world *arch.World, roots []string) error {
 		}
 	}
 
-	for _, comp := range world.Components {
-		if contains(roots, comp.Name()) {
-			walk(comp)
-		}
+	for _, comp := range selected {
+		walk(comp)
 	}
 
 	keep := []*arch.Component{}

@@ -41,6 +41,18 @@ func (node *Component) Name() string {
 	return node.Type.String()
 }
 
+// ReferenceName returns the declaration name used by selectors and annotations.
+// Unlike Name, generic declaration names do not include type parameters.
+func (node *Component) ReferenceName() string {
+	if node.ExternalID != "" {
+		return node.ExternalID
+	}
+	if node.Obj.Pkg() == nil {
+		return node.ShortName()
+	}
+	return node.Package() + "." + node.ShortName()
+}
+
 // Package returns the package name.
 func (node *Component) Package() string {
 	if node.ExternalID != "" {

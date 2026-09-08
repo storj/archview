@@ -100,8 +100,12 @@ graph, `graphml` includes metadata and yEd labels, and `elk` produces ELK text.
 | `-nocolor` | Disable DOT coloring. |
 
 `-root` and `-skip-class` accept repeated flags or comma-separated values.
-Root names use fully qualified type names, before prefix trimming. Quote names
-containing spaces. For example, with module path `example`:
+Root names use fully qualified declaration names, before prefix trimming: use
+`example.Pair` for `Pair[A, B any]`. Full displayed type names are also accepted.
+Each `-root` value is matched literally first, so `-root 'external:users,audit'`
+selects that resource if it exists. Otherwise, the value is interpreted as a
+comma-separated list. Use repeated flags when selecting multiple names that
+contain commas, and quote names containing spaces. For example, with module path `example`:
 
 ```sh
 archview -root example.Server -skip-class 'Database Implementation' -trim-prefix example. ./...

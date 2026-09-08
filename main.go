@@ -24,7 +24,11 @@ func main() {
 	var skipClasses Strings
 	var roots Strings
 	flag.Var(&skipClasses, "skip-class", "skip components with the specified class in output")
-	flag.Var(&roots, "root", "only display components that are dependencies of root")
+	flag.Func("root", "only display components that are dependencies of root", func(value string) error {
+		// Resolve literal names before interpreting comma-separated lists.
+		roots = append(roots, value)
+		return nil
+	})
 
 	var options graph.Options
 	options.Clustering = graph.ClusterByClass

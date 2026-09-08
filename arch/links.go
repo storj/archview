@@ -68,10 +68,7 @@ func (a *analysis) resolveLinks() {
 	byName := map[string][]*Component{}
 	for _, component := range a.world.Components {
 		// Declaration names also address generic components without type parameters.
-		name := component.Package() + "." + component.ShortName()
-		if component.ExternalID != "" {
-			name = component.Name()
-		}
+		name := component.ReferenceName()
 		byName[name] = append(byName[name], component)
 	}
 	for _, pending := range a.links {

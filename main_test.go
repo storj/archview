@@ -81,6 +81,46 @@ func TestBasic(t *testing.T) {
 		}
 	})
 
+	t.Run("literal root names", func(t *testing.T) {
+		dir := t.TempDir()
+		for name, body := range map[string]string{
+			"go.mod":   "module example\n\ngo 1.27\n",
+			"types.go": "package example\n// architecture: Generic\ntype Pair[A, B any] struct{}\n// architecture:resource external:users,audit : Table\n// architecture:resource external:users : Table\n",
+		} {
+			if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}
+		for _, tc := range []struct {
+			name  string
+			roots []string
+			nodes string
+		}{
+			{"declaration", []string{"example.Pair"}, "\t\"example.Pair[A, B any]\";\n"},
+			{"display", []string{"example.Pair[A, B any]"}, "\t\"example.Pair[A, B any]\";\n"},
+			{"literal comma", []string{"external:users,audit"}, "\t\"external:users,audit\";\n"},
+			{"list", []string{"example.Pair, external:users"}, "\t\"example.Pair[A, B any]\";\n\t\"external:users\";\n"},
+			{"repeated literals", []string{"example.Pair[A, B any]", "external:users,audit"}, "\t\"example.Pair[A, B any]\";\n\t\"external:users,audit\";\n"},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				args := []string{"-format", "dot-basic"}
+				for _, root := range tc.roots {
+					args = append(args, "-root", root)
+				}
+				args = append(args, "./...")
+				run := exec.Command(archviewexe, args...)
+				run.Dir = dir
+				got, err := run.CombinedOutput()
+				if err != nil {
+					t.Fatalf("root selection failed: %v\n%s", err, got)
+				}
+				if want := "digraph G {\n" + tc.nodes + "}\n"; string(got) != want {
+					t.Fatalf("got %s, want %s", got, want)
+				}
+			})
+		}
+	})
+
 	t.Run("client server relationships", func(t *testing.T) {
 		for _, format := range []string{"dot", "dot-basic", "graphml", "elk"} {
 			t.Run(format, func(t *testing.T) {
