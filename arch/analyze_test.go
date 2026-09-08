@@ -72,6 +72,48 @@ type Server struct {
 	}
 }
 
+func TestImplementationAssignments(t *testing.T) {
+	world := analyzeSource(t, `package example
+// architecture: API
+type API interface { Value() *Impl }
+// architecture: Alias
+type Alias = API
+// architecture: Implementation
+type Impl struct{}
+func (*Impl) Value() *Impl { return nil }
+var original API
+var copied API = original
+var alias Alias = original
+var copiedBack API = alias
+var _ API = (*Impl)(nil)
+var _ API = &Impl{}
+`)
+	for _, c := range world.Components {
+		implementations := 0
+		dependencies := 0
+		for _, link := range c.Links {
+			if link.Implementation {
+				implementations++
+				if c.ShortName() != "API" || link.Target.ShortName() != "Impl" {
+					t.Errorf("unexpected implementation link: %s -> %s", c.ShortName(), link.Target.ShortName())
+				}
+			} else {
+				dependencies++
+			}
+		}
+		want := 0
+		if c.ShortName() == "API" {
+			want = 1
+		}
+		if implementations != want {
+			t.Errorf("%s has %d implementation links, want %d", c.ShortName(), implementations, want)
+		}
+		if c.ShortName() == "API" && dependencies != 1 {
+			t.Error("implementation deduplication removed the method-result dependency")
+		}
+	}
+}
+
 func TestGroupedAnnotations(t *testing.T) {
 	world := analyzeSource(t, `package example
 type (

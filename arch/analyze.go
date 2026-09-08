@@ -88,16 +88,25 @@ func (a *analysis) addImpls(pkg *packages.Package) bool {
 				}
 
 				target := pkg.TypesInfo.TypeOf(vs.Values[i])
-				if target == nil {
+				if target == nil || types.Identical(obj.Type(), target) {
 					continue
 				}
 
 				linkTo := a.world.componentFor(target)
-				if linkTo == nil {
+				if linkTo == nil || linkTo == linkFrom {
 					continue
 				}
 
-				linkFrom.Add(NewImplLink(linkTo))
+				duplicate := false
+				for _, link := range linkFrom.Links {
+					if link.Implementation && link.Target == linkTo {
+						duplicate = true
+						break
+					}
+				}
+				if !duplicate {
+					linkFrom.Add(NewImplLink(linkTo))
+				}
 			}
 		}
 	})

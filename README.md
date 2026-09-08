@@ -140,3 +140,7 @@ Explicit interface assignments such as `var _ DB = (*PostgresDB)(nil)` create
 implementation links. ArchView does not infer every possible interface
 implementation, analyze function bodies as call graphs, or inspect concrete
 methods merely because their receiver is annotated.
+
+Assignments between identical interface types (including aliases) do not create
+implementation links. Repeated assertions for the same component pair produce
+one implementation link, independently of any ordinary dependency links.
