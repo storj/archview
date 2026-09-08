@@ -64,7 +64,9 @@ func main() {
 	world := arch.Analyze(pkgs...)
 
 	if !roots.Empty() {
-		edit.KeepRoots(world, roots)
+		if err := edit.KeepRoots(world, roots); err != nil {
+			log.Fatal(err)
+		}
 	}
 	if !skipClasses.Empty() {
 		edit.RemoveClasses(world, skipClasses)

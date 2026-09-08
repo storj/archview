@@ -1,7 +1,10 @@
 package edit
 
 import (
+	"fmt"
 	"github.com/storj/archview/arch"
+	"slices"
+	"strings"
 )
 
 // Roots returns components without incoming links.
@@ -23,8 +26,25 @@ func Roots(world *arch.World) []*arch.Component {
 	return roots
 }
 
-// KeepRoots keeps any component that is a dependency to root.
-func KeepRoots(world *arch.World, roots []string) {
+// KeepRoots keeps roots and their transitive dependencies. Unknown roots return
+// an error without changing the world.
+func KeepRoots(world *arch.World, roots []string) error {
+	known := make(map[string]bool, len(world.Components))
+	var available []string
+	for _, comp := range world.Components {
+		known[comp.Name()] = true
+		available = append(available, comp.Name())
+	}
+	var missing []string
+	for _, root := range roots {
+		if !known[root] {
+			missing = append(missing, root)
+		}
+	}
+	if len(missing) > 0 {
+		slices.Sort(available)
+		return fmt.Errorf("unknown roots %q; available components: %s", missing, strings.Join(available, ", "))
+	}
 	walked := map[*arch.Component]bool{}
 	var walk func(*arch.Component)
 	walk = func(comp *arch.Component) {
@@ -50,4 +70,5 @@ func KeepRoots(world *arch.World, roots []string) {
 	}
 
 	KeepComponents(world, keep)
+	return nil
 }

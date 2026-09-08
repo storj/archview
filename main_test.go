@@ -33,6 +33,7 @@ func TestBasic(t *testing.T) {
 		{"invalid format", []string{"-format", "invalid", "./..."}, "unknown format"},
 		{"missing package", []string{"./missing"}, "missing"},
 		{"no matches", []string{"./...nomatch"}, "no packages matched"},
+		{"unknown root", []string{"-root", "typo", "./..."}, "unknown roots"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			outfile := filepath.Join(t.TempDir(), "existing.dot")
