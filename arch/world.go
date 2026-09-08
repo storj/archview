@@ -25,6 +25,15 @@ func (world *World) Add(n *Component) {
 	world.Components = append(world.Components, n)
 }
 
+// componentFor resolves aliases, pointers, and generic instances to a declaration.
+func (world *World) componentFor(typ types.Type) *Component {
+	typ = tryDeref(typ)
+	if named, ok := typ.(*types.Named); ok {
+		typ = named.Origin()
+	}
+	return world.ByType[typ]
+}
+
 // String creates a short description of the world that is useful for debugging.
 func (world *World) String() string {
 	texts := []string{}

@@ -54,6 +54,42 @@ type (
 	}
 }
 
+func TestGenericAndPointerDependencies(t *testing.T) {
+	world := analyzeSource(t, `package example
+// architecture: Service
+type Service struct{}
+// architecture: Cache
+type Cache[T any] struct{}
+type Alias = Cache[int]
+// architecture: Server
+type Server struct { Cache *Alias; Service ***Service }
+// architecture: Factory
+type Factory interface { New() **Cache[string] }
+// architecture: Interface
+type API[T any] interface { Get() T }
+func (*Cache[T]) Get() T { var zero T; return zero }
+var _ API[int] = (*Cache[int])(nil)
+type Recursive *Recursive
+// architecture: Recursive
+type Holder struct { Value Recursive }
+`)
+	want := map[string][]string{"Server": {"Cache", "Service"}, "Factory": {"Cache"}, "API": {"Cache"}, "Holder": nil}
+	for _, c := range world.Components {
+		targets, ok := want[c.ShortName()]
+		if !ok {
+			continue
+		}
+		if len(c.Links) != len(targets) {
+			t.Fatalf("%s: want %v", c, targets)
+		}
+		for i, name := range targets {
+			if c.Links[i].Target.ShortName() != name {
+				t.Errorf("%s: link %d should target %s", c, i, name)
+			}
+		}
+	}
+}
+
 func TestNamedTypeDependencies(t *testing.T) {
 	world := analyzeSource(t, `package example
 // architecture: Service

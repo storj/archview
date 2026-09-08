@@ -84,8 +84,8 @@ func (a *analysis) addImpls(pkg *packages.Package) bool {
 				if _, ok := obj.Type().Underlying().(*types.Interface); !ok {
 					continue
 				}
-				linkFrom, isComponent := a.world.ByType[tryDeref(obj.Type())]
-				if !isComponent {
+				linkFrom := a.world.componentFor(obj.Type())
+				if linkFrom == nil {
 					continue
 				}
 
@@ -94,8 +94,8 @@ func (a *analysis) addImpls(pkg *packages.Package) bool {
 					continue
 				}
 
-				linkTo, isComponent := a.world.ByType[tryDeref(target)]
-				if !isComponent {
+				linkTo := a.world.componentFor(target)
+				if linkTo == nil {
 					continue
 				}
 
@@ -124,7 +124,7 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 				result := m.Results()
 				for at := range result.Variables() {
 
-					link := a.world.ByType[tryDeref(at.Type())]
+					link := a.world.componentFor(at.Type())
 					if link != nil {
 						source.Add(NewLink(path+"."+method.Name(), link))
 					}
@@ -138,7 +138,7 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 		for field := range t.Fields() {
 			fieldType := tryDeref(field.Type())
 
-			link := a.world.ByType[fieldType]
+			link := a.world.componentFor(fieldType)
 			if link != nil {
 				source.Add(NewLink(path+"."+field.Name(), link))
 				continue
@@ -170,8 +170,11 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 
 func tryDeref(t types.Type) types.Type {
 	t = types.Unalias(t)
-	if ptr, ok := t.(*types.Pointer); ok {
-		return types.Unalias(ptr.Elem())
+	for {
+		ptr, ok := t.(*types.Pointer)
+		if !ok {
+			return t
+		}
+		t = types.Unalias(ptr.Elem())
 	}
-	return t
 }
