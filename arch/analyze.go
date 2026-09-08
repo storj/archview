@@ -2,10 +2,8 @@
 package arch
 
 import (
-	"fmt"
 	"go/ast"
 	"go/types"
-	"os"
 
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
@@ -119,53 +117,44 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 	switch t := typ.Underlying().(type) {
 	case *types.Interface:
 		for method := range t.Methods() {
-			switch m := method.Type().(type) {
-			case *types.Signature:
-				result := m.Results()
-				for at := range result.Variables() {
-
-					link := a.world.componentFor(at.Type())
-					if link != nil {
-						source.Add(NewLink(path+"."+method.Name(), link))
-					}
-				}
-			default:
-				fmt.Fprintf(os.Stderr, "unhandled interface method type %T\n", m)
+			a.includeLinks(source, path+"."+method.Name(), method.Type(), visiting)
+		}
+	case *types.Signature:
+		for _, tuple := range []*types.Tuple{t.Params(), t.Results()} {
+			for variable := range tuple.Variables() {
+				a.includeDependency(source, path, variable.Type(), visiting)
 			}
 		}
-
 	case *types.Struct:
 		for field := range t.Fields() {
-			fieldType := tryDeref(field.Type())
+			a.includeDependency(source, path+"."+field.Name(), field.Type(), visiting)
+		}
+	case *types.Pointer:
+		a.includeDependency(source, path, t.Elem(), visiting)
+	case *types.Array:
+		a.includeDependency(source, path, t.Elem(), visiting)
+	case *types.Slice:
+		a.includeDependency(source, path, t.Elem(), visiting)
+	case *types.Chan:
+		a.includeDependency(source, path, t.Elem(), visiting)
+	case *types.Map:
+		a.includeDependency(source, path, t.Key(), visiting)
+		a.includeDependency(source, path, t.Elem(), visiting)
+	}
+}
 
-			link := a.world.componentFor(fieldType)
-			if link != nil {
-				source.Add(NewLink(path+"."+field.Name(), link))
-				continue
-			}
-
-			switch f := fieldType.Underlying().(type) {
-			case *types.Pointer:
-				a.includeLinks(source, path+"."+field.Name(), f, visiting)
-			case *types.Struct:
-				a.includeLinks(source, path+"."+field.Name(), f, visiting)
-			case *types.Interface:
-				a.includeLinks(source, path+"."+field.Name(), f, visiting)
-
-			case *types.Array, *types.Signature, *types.Slice, *types.Basic, *types.Chan, *types.Map:
-				// ignore basic compound types
-			default:
-				fmt.Fprintf(os.Stderr, "unhandled struct field %q type %T\n", path, f)
+func (a *analysis) includeDependency(source *Component, path string, typ types.Type, visiting visiting) {
+	if target := a.world.componentFor(typ); target != nil {
+		link := NewLink(path, target)
+		for _, existing := range source.Links {
+			if !existing.Implementation && existing.Path == link.Path && existing.Target == target {
+				return
 			}
 		}
-
-	case *types.Pointer:
-		a.includeLinks(source, path, t.Elem(), visiting)
-	case *types.Array, *types.Signature, *types.Slice, *types.Basic, *types.Chan, *types.Map:
-		// ignore basic compound types
-	default:
-		fmt.Fprintf(os.Stderr, "unhandled type %T\n", t)
+		source.Add(link)
+		return
 	}
+	a.includeLinks(source, path, typ, visiting)
 }
 
 func tryDeref(t types.Type) types.Type {

@@ -90,6 +90,37 @@ type Holder struct { Value Recursive }
 	}
 }
 
+func TestContainerAndSignatureDependencies(t *testing.T) {
+	world := analyzeSource(t, `package example
+// architecture: Service
+type Service struct{}
+type Loop []Loop
+// architecture: Server
+type Server struct {
+ Slice []*Service
+ Array [2]*Service
+ Map map[*Service]chan []*Service
+ Channel <-chan *Service
+ Callback func(*Service) *Service
+ Nested struct { Value map[string]*Service }
+ Cycle Loop
+}
+// architecture: API
+type API interface { Use(*Service); Batch(...*Service) []*Service }
+`)
+	for _, c := range world.Components {
+		want := map[string][]string{"Server": {"Slice", "Array", "Map", "Channel", "Callback", "Nested.Value"}, "API": {"Batch", "Use"}}[c.ShortName()]
+		if len(c.Links) != len(want) {
+			t.Fatalf("%s: want paths %v", c, want)
+		}
+		for i, path := range want {
+			if c.Links[i].Path != path || c.Links[i].Target.ShortName() != "Service" {
+				t.Errorf("%s: link %d should be %s -> Service", c, i, path)
+			}
+		}
+	}
+}
+
 func TestNamedTypeDependencies(t *testing.T) {
 	world := analyzeSource(t, `package example
 // architecture: Service
