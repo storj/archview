@@ -72,40 +72,35 @@ func main() {
 		edit.RemoveClasses(world, skipClasses)
 	}
 
-	var out io.Writer = os.Stdout
-	if *outname != "" {
-		file, err := os.Create(*outname)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer file.Close()
-
-		out = file
-	}
-
+	var renderer io.WriterTo
 	switch *format {
 	case "dot", "":
-		_, err = (&graph.Dot{
+		renderer = &graph.Dot{
 			World:   world,
 			Options: options,
-		}).WriteTo(out)
+		}
 	case "dot-basic":
-		_, err = (&graph.DotBasic{
+		renderer = &graph.DotBasic{
 			World:   world,
 			Options: options,
-		}).WriteTo(out)
+		}
 	case "graphml":
-		_, err = (&graph.GraphML{
+		renderer = &graph.GraphML{
 			World:   world,
 			Options: options,
-		}).WriteTo(out)
+		}
 	case "elk":
-		_, err = (&graph.ELK{
+		renderer = &graph.ELK{
 			World:   world,
 			Options: options,
-		}).WriteTo(out)
+		}
 	default:
 		log.Fatalf("unknown format %q", *format)
+	}
+	if *outname == "" {
+		_, err = renderer.WriteTo(os.Stdout)
+	} else {
+		err = writeOutput(*outname, renderer)
 	}
 	if err != nil {
 		log.Fatalf("unable to write output: %v", err)
