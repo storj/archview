@@ -115,13 +115,11 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 
 	switch t := typ.Underlying().(type) {
 	case *types.Interface:
-		for i := 0; i < t.NumMethods(); i++ {
-			method := t.Method(i)
+		for method := range t.Methods() {
 			switch m := method.Type().(type) {
 			case *types.Signature:
 				result := m.Results()
-				for i := 0; i < result.Len(); i++ {
-					at := result.At(i)
+				for at := range result.Variables() {
 
 					link := a.world.ByType[at.Type().Underlying()]
 					if link != nil {
@@ -134,8 +132,7 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 		}
 
 	case *types.Struct:
-		for i := 0; i < t.NumFields(); i++ {
-			field := t.Field(i)
+		for field := range t.Fields() {
 			underlying := tryDeref(field.Type().Underlying())
 
 			link := a.world.ByType[underlying]

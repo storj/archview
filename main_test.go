@@ -1,7 +1,6 @@
 package main_test
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,7 +10,7 @@ import (
 )
 
 func TestBasic(t *testing.T) {
-	tempdir, err := ioutil.TempDir("", "archview")
+	tempdir, err := os.MkdirTemp("", "archview")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,11 +43,11 @@ func TestBasic(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			got, err := ioutil.ReadFile(outfile)
+			got, err := os.ReadFile(outfile)
 			if err != nil {
 				t.Fatalf("failed to read output: %v", err)
 			}
-			expected, err := ioutil.ReadFile(filepath.Join(match, "graph.dot"))
+			expected, err := os.ReadFile(filepath.Join(match, "graph.dot"))
 			if err != nil {
 				t.Fatalf("failed to read expected: %v", err)
 			}

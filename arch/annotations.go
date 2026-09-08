@@ -12,8 +12,8 @@ func ExtractAnnotation(gen *ast.GenDecl, ts *ast.TypeSpec) (comment, tag string,
 	}
 
 	for i, c := range gen.Doc.List {
-		if strings.HasPrefix(c.Text, "// architecture:") {
-			tag := strings.TrimPrefix(c.Text, "// architecture:")
+		if after, ok0 := strings.CutPrefix(c.Text, "// architecture:"); ok0 {
+			tag := after
 
 			var group ast.CommentGroup
 			group.List = append(group.List, gen.Doc.List[:i]...)

@@ -17,7 +17,7 @@ type DotBasic struct {
 
 // WriteTo writes dot output to w.
 func (ctx *DotBasic) WriteTo(w io.Writer) (n int64, err error) {
-	write := func(format string, args ...interface{}) bool {
+	write := func(format string, args ...any) bool {
 		if err != nil {
 			return false
 		}
