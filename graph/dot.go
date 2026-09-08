@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/storj/archview/arch"
@@ -49,7 +50,13 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 			byClass[component.Class] = append(byClass[component.Class], component)
 		}
 
-		for class, components := range byClass {
+		classes := make([]string, 0, len(byClass))
+		for class := range byClass {
+			classes = append(classes, class)
+		}
+		sort.Strings(classes)
+		for _, class := range classes {
+			components := byClass[class]
 			write("\tsubgraph cluster_%v {\n", sanitize(class))
 			write("\t\tlabel=%q;\n\n", class)
 			write("\t\tbgcolor=gray98; pencolor=gray80; fontsize=10;\n\n")
@@ -71,6 +78,7 @@ func (ctx *Dot) WriteTo(w io.Writer) (n int64, err error) {
 					ctx.label(component),
 					ctx.href(component),
 					ctx.color(component),
+					ctx.nodetooltip(component),
 				))
 		}
 	}
@@ -114,18 +122,7 @@ func (ctx *Dot) linkStyle(link *arch.Link) string {
 }
 
 func (ctx *Dot) id(component *arch.Component) string {
-	return strings.Map(func(r rune) rune {
-		switch {
-		case 'a' <= r && r <= 'z':
-			return r
-		case 'A' <= r && r <= 'Z':
-			return r
-		case '0' <= r && r <= '9':
-			return r
-		default:
-			return '_'
-		}
-	}, component.Name())
+	return sanitize(component.Name())
 }
 
 func (ctx *Dot) label(component *arch.Component) string {

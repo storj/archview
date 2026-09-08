@@ -29,8 +29,20 @@ func (ctx *ELK) WriteTo(w io.Writer) (n int64, err error) {
 
 	write("algorithm: layered\n\n")
 
+	// Prefix trimming is for readability, but must not merge different nodes.
+	ids := map[*arch.Component]string{}
+	used := map[string]int{}
 	for _, source := range ctx.World.Components {
-		write("node %v\n", sanitize(strings.TrimPrefix(source.Name(), ctx.TrimPrefix)))
+		base := sanitize(strings.TrimPrefix(source.Name(), ctx.TrimPrefix))
+		id := base
+		if used[base] > 0 {
+			// A double underscore cannot occur after the prefix in sanitize's
+			// output, so the suffix cannot collide with another base ID.
+			id = fmt.Sprintf("%s__%d", base, used[base])
+		}
+		used[base]++
+		ids[source] = id
+		write("node %v\n", id)
 	}
 
 	write("\n")
@@ -38,8 +50,8 @@ func (ctx *ELK) WriteTo(w io.Writer) (n int64, err error) {
 	for _, source := range ctx.World.Components {
 		for _, link := range source.Links {
 			write("edge %v -> %v\n",
-				sanitize(strings.TrimPrefix(source.Name(), ctx.TrimPrefix)),
-				sanitize(strings.TrimPrefix(link.Target.Name(), ctx.TrimPrefix)),
+				ids[source],
+				ids[link.Target],
 			)
 		}
 	}

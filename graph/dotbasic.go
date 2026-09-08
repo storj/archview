@@ -27,12 +27,28 @@ func (ctx *DotBasic) WriteTo(w io.Writer) (n int64, err error) {
 		return err == nil
 	}
 
-	write("graph G {\n")
+	write("digraph G {\n")
 	defer write("}\n")
+
+	connected := map[*arch.Component]bool{}
+	for _, source := range ctx.World.Components {
+		for _, link := range source.Links {
+			connected[source] = true
+			connected[link.Target] = true
+		}
+	}
+	for _, component := range ctx.World.Components {
+		label := strings.TrimPrefix(component.Name(), ctx.TrimPrefix)
+		if label != component.Name() {
+			write("\t%q [label=%q];\n", component.Name(), label)
+		} else if !connected[component] {
+			write("\t%q;\n", component.Name())
+		}
+	}
 
 	for _, source := range ctx.World.Components {
 		for _, link := range source.Links {
-			write("\t%q -> %q;\n", strings.TrimPrefix(source.Name(), ctx.TrimPrefix), strings.TrimPrefix(link.Target.Name(), ctx.TrimPrefix))
+			write("\t%q -> %q;\n", source.Name(), link.Target.Name())
 		}
 	}
 	return n, err

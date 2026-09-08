@@ -39,6 +39,14 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
+	if *format == "" {
+		*format = strings.TrimPrefix(filepath.Ext(*outname), ".")
+	}
+	switch *format {
+	case "", "dot", "dot-basic", "graphml", "elk":
+	default:
+		log.Fatalf("unknown format %q", *format)
+	}
 
 	pkgs, err := packages.Load(&packages.Config{
 		Mode: packages.LoadMode(^0),
@@ -46,11 +54,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if packages.PrintErrors(pkgs) > 0 {
+		os.Exit(1)
+	}
+	if len(pkgs) == 0 {
+		log.Fatal("no packages matched")
+	}
 
 	world := arch.Analyze(pkgs...)
-	if *format == "" {
-		*format = strings.TrimPrefix(filepath.Ext(*outname), ".")
-	}
 
 	if !roots.Empty() {
 		edit.KeepRoots(world, roots)

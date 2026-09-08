@@ -48,7 +48,7 @@ func (a *analysis) addComponents(pkg *packages.Package) bool {
 
 			comment, tag, ok := ExtractAnnotation(gen, ts)
 			if !ok {
-				return
+				continue
 			}
 
 			obj := pkg.TypesInfo.Defs[ts.Name]
@@ -81,7 +81,10 @@ func (a *analysis) addImpls(pkg *packages.Package) bool {
 
 			for i, source := range vs.Names {
 				obj := pkg.TypesInfo.ObjectOf(source)
-				linkFrom, isComponent := a.world.ByType[tryDeref(obj.Type().Underlying())]
+				if _, ok := obj.Type().Underlying().(*types.Interface); !ok {
+					continue
+				}
+				linkFrom, isComponent := a.world.ByType[tryDeref(obj.Type())]
 				if !isComponent {
 					continue
 				}
@@ -91,7 +94,7 @@ func (a *analysis) addImpls(pkg *packages.Package) bool {
 					continue
 				}
 
-				linkTo, isComponent := a.world.ByType[tryDeref(target.Underlying())]
+				linkTo, isComponent := a.world.ByType[tryDeref(target)]
 				if !isComponent {
 					continue
 				}
@@ -121,7 +124,7 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 				result := m.Results()
 				for at := range result.Variables() {
 
-					link := a.world.ByType[at.Type().Underlying()]
+					link := a.world.ByType[tryDeref(at.Type())]
 					if link != nil {
 						source.Add(NewLink(path+"."+method.Name(), link))
 					}
@@ -133,15 +136,15 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 
 	case *types.Struct:
 		for field := range t.Fields() {
-			underlying := tryDeref(field.Type().Underlying())
+			fieldType := tryDeref(field.Type())
 
-			link := a.world.ByType[underlying]
+			link := a.world.ByType[fieldType]
 			if link != nil {
 				source.Add(NewLink(path+"."+field.Name(), link))
 				continue
 			}
 
-			switch f := underlying.(type) {
+			switch f := fieldType.Underlying().(type) {
 			case *types.Pointer:
 				a.includeLinks(source, path+"."+field.Name(), f, visiting)
 			case *types.Struct:
@@ -156,6 +159,8 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 			}
 		}
 
+	case *types.Pointer:
+		a.includeLinks(source, path, t.Elem(), visiting)
 	case *types.Array, *types.Signature, *types.Slice, *types.Basic, *types.Chan, *types.Map:
 		// ignore basic compound types
 	default:
@@ -164,8 +169,9 @@ func (a *analysis) includeLinks(source *Component, path string, typ types.Type, 
 }
 
 func tryDeref(t types.Type) types.Type {
+	t = types.Unalias(t)
 	if ptr, ok := t.(*types.Pointer); ok {
-		return ptr.Elem().Underlying()
+		return types.Unalias(ptr.Elem())
 	}
-	return t.Underlying()
+	return t
 }

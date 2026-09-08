@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -23,6 +24,37 @@ func TestBasic(t *testing.T) {
 	if err != nil {
 		t.Log(string(result))
 		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name    string
+		args    []string
+		message string
+	}{
+		{"invalid format", []string{"-format", "invalid", "./..."}, "unknown format"},
+		{"missing package", []string{"./missing"}, "missing"},
+		{"no matches", []string{"./...nomatch"}, "no packages matched"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			outfile := filepath.Join(t.TempDir(), "existing.dot")
+			const original = "existing output\n"
+			if err := os.WriteFile(outfile, []byte(original), 0600); err != nil {
+				t.Fatal(err)
+			}
+			args := append([]string{"-out", outfile}, tc.args...)
+			run := exec.Command(archviewexe, args...)
+			run.Dir = "testdata/basic"
+			output, err := run.CombinedOutput()
+			if err == nil {
+				t.Fatalf("expected failure, output: %s", output)
+			}
+			if !strings.Contains(string(output), tc.message) {
+				t.Errorf("missing diagnostic %q: %s", tc.message, output)
+			}
+			got, err := os.ReadFile(outfile)
+			if err != nil || string(got) != original {
+				t.Fatalf("existing output modified: %q, error: %v", got, err)
+			}
+		})
 	}
 
 	matches, err := filepath.Glob("testdata/*")

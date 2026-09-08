@@ -21,7 +21,7 @@ func NewWorld() *World {
 
 // Add adds a new component to world.
 func (world *World) Add(n *Component) {
-	world.ByType[n.Type.Underlying()] = n
+	world.ByType[types.Unalias(n.Type)] = n
 	world.Components = append(world.Components, n)
 }
 

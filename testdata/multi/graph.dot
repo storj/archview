@@ -1,4 +1,5 @@
-graph G {
+digraph G {
+	"example/pgdb.DB";
 	"example/site/user.Service" -> "example/site/user.Repo";
 	"example/site/user.Endpoint" -> "example/site/user.Service";
 	"example/site/comment.Service" -> "example/site/comment.Repo";

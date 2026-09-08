@@ -9,20 +9,19 @@ jobs:
   test:
     strategy:
       matrix:
-        go: ['1.19.x']
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7.0.1
 
     - name: Install Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v7.0.0
       with:
-        go-version: ${{ matrix.go-version }}
+        go-version-file: go.mod
 
     - name: Get dependencies
-      run: go get -v -t -d ./...
+      run: go mod download
 
     - name: Build
       run: go build -v .
@@ -34,8 +33,8 @@ jobs:
       run: go vet ./...
 
     - name: Lint
-      uses: dominikh/staticcheck-action@v1.2.0
+      uses: dominikh/staticcheck-action@v1.4.1
       with:
-        version: "2022.1.1"
+        version: "latest"
         install-go: false
-        cache-key: ${{ matrix.go }}
+        cache-key: ${{ hashFiles('go.mod') }}

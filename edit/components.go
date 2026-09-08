@@ -4,8 +4,14 @@ import "github.com/storj/archview/arch"
 
 // KeepComponents only keeps the specified components in world.
 func KeepComponents(world *arch.World, components []*arch.Component) {
+	keep := make(map[*arch.Component]bool, len(components))
 	for _, comp := range components {
-		delete(world.ByType, comp.Type)
+		keep[comp] = true
+	}
+	for typ, comp := range world.ByType {
+		if !keep[comp] {
+			delete(world.ByType, typ)
+		}
 	}
 
 	result := world.Components[:0]
@@ -13,13 +19,13 @@ func KeepComponents(world *arch.World, components []*arch.Component) {
 	for _, comp := range world.Components {
 		links := comp.Links[:0]
 		for _, link := range comp.Links {
-			if containsComponent(components, link.Target) {
+			if keep[link.Target] {
 				links = append(links, link)
 			}
 		}
 		comp.Links = links
 
-		if containsComponent(components, comp) {
+		if keep[comp] {
 			result = append(result, comp)
 		}
 	}

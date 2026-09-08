@@ -1,4 +1,4 @@
-graph G {
+digraph G {
 	"example/basic.DB" -> "example/basic.PostgresDB";
 	"example/basic.DB" -> "example/basic.SqliteDB";
 	"example/basic.Users" -> "example/basic.DB";

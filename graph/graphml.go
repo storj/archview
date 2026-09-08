@@ -24,9 +24,9 @@ func (ctx *GraphML) WriteTo(w io.Writer) (n int64, err error) {
 	file.Graphs = append(file.Graphs, ctx.graph())
 
 	file.Key = []graphml.Key{
-		{For: "node", ID: "label", AttrName: "label", AttrType: "string"},
+		{For: "all", ID: "label", AttrName: "label", AttrType: "string"},
 		{For: "node", ID: "shape", AttrName: "shape", AttrType: "string"},
-		{For: "edge", ID: "label", AttrName: "label", AttrType: "string"},
+		{For: "all", ID: "tooltip", AttrName: "tooltip", AttrType: "string"},
 
 		{For: "node", ID: "name", AttrName: "name", AttrType: "string"},
 		{For: "node", ID: "url", AttrName: "url", AttrType: "string"},
@@ -39,13 +39,26 @@ func (ctx *GraphML) WriteTo(w io.Writer) (n int64, err error) {
 		{For: "edge", ID: "yedgelabel", YFilesType: "edgegraphics"},
 	}
 
-	enc := xml.NewEncoder(w)
+	counted := &countingWriter{Writer: w}
+	enc := xml.NewEncoder(counted)
 	enc.Indent("", "\t")
-	return -1, enc.Encode(file)
+	err = enc.Encode(file)
+	return counted.n, err
+}
+
+type countingWriter struct {
+	io.Writer
+	n int64
+}
+
+func (w *countingWriter) Write(p []byte) (int, error) {
+	n, err := w.Writer.Write(p)
+	w.n += int64(n)
+	return n, err
 }
 
 func (ctx *GraphML) graph() *graphml.Graph {
-	out := &graphml.Graph{}
+	out := &graphml.Graph{ID: "G"}
 	out.EdgeDefault = graphml.Directed
 
 	for _, component := range ctx.World.Components {
