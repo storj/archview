@@ -58,28 +58,33 @@ func TestBasic(t *testing.T) {
 		})
 	}
 
-	t.Run("invalid relationship preserves output", func(t *testing.T) {
-		dir := t.TempDir()
-		for name, body := range map[string]string{
-			"go.mod":    "module example\n\ngo 1.27\n",
-			"main.go":   "package example\n// architecture: Service\ntype Service struct{}\n// architecture:link Service -> Typo\n",
-			"graph.dot": "existing output",
-		} {
-			if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0600); err != nil {
-				t.Fatal(err)
+	for _, tc := range []struct{ name, source, diagnostic string }{
+		{"invalid relationship", "package example\n// architecture: Service\ntype Service struct{}\n// architecture:link Service -> Typo\n", "Typo"},
+		{"local annotation", "package example\nfunc first() {\n// architecture: Local\ntype Node struct{}\n}\n", "local type \"Node\""},
+	} {
+		t.Run(tc.name+" preserves output", func(t *testing.T) {
+			dir := t.TempDir()
+			for name, body := range map[string]string{
+				"go.mod":    "module example\n\ngo 1.27\n",
+				"main.go":   tc.source,
+				"graph.dot": "existing output",
+			} {
+				if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0600); err != nil {
+					t.Fatal(err)
+				}
 			}
-		}
-		run := exec.Command(archviewexe, "-out", "graph.dot", "./...")
-		run.Dir = dir
-		output, err := run.CombinedOutput()
-		if err == nil || !strings.Contains(string(output), "main.go:4:") || !strings.Contains(string(output), "Typo") {
-			t.Fatalf("expected positioned endpoint error: %v\n%s", err, output)
-		}
-		got, err := os.ReadFile(filepath.Join(dir, "graph.dot"))
-		if err != nil || string(got) != "existing output" {
-			t.Fatalf("output changed: %q, %v", got, err)
-		}
-	})
+			run := exec.Command(archviewexe, "-out", "graph.dot", "./...")
+			run.Dir = dir
+			output, err := run.CombinedOutput()
+			if err == nil || !strings.Contains(string(output), "main.go:4:") || !strings.Contains(string(output), tc.diagnostic) {
+				t.Fatalf("expected positioned endpoint error: %v\n%s", err, output)
+			}
+			got, err := os.ReadFile(filepath.Join(dir, "graph.dot"))
+			if err != nil || string(got) != "existing output" {
+				t.Fatalf("output changed: %q, %v", got, err)
+			}
+		})
+	}
 
 	t.Run("literal root names", func(t *testing.T) {
 		dir := t.TempDir()

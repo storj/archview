@@ -3,7 +3,9 @@ package arch
 
 import (
 	"errors"
+	"fmt"
 	"go/ast"
+	"go/token"
 	"go/types"
 
 	"golang.org/x/tools/go/ast/inspector"
@@ -60,6 +62,14 @@ func (a *analysis) addComponents(pkg *packages.Package) bool {
 			}
 
 			obj := pkg.TypesInfo.Defs[ts.Name]
+			if obj.Parent() != pkg.Types.Scope() {
+				var position token.Position
+				if pkg.Fset != nil {
+					position = pkg.Fset.Position(ts.Name.Pos())
+				}
+				a.errors = append(a.errors, fmt.Errorf("%s: architecture annotation on local type %q is unsupported; move the type to package scope", position, ts.Name.Name))
+				continue
+			}
 			a.world.Add(&Component{
 				Obj:     obj,
 				Type:    obj.Type(),

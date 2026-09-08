@@ -126,6 +126,11 @@ Place `// architecture: Class` above a type declaration or an individual type
 inside a grouped declaration. A group annotation applies to its types unless a
 type has its own annotation.
 
+Annotated types must be declared at package scope. Annotations on types inside
+functions, methods, closures, or nested blocks produce a source-location error;
+move those types to package scope so graph identifiers and links are unambiguous.
+Unannotated local types are allowed.
+
 ArchView follows struct fields, including nested unannotated structs, aliases,
 multiple pointer levels, arrays, slices, channel elements, and both map keys and
 values. It also follows parameters and results of interface methods and function
