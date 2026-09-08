@@ -5,6 +5,8 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/parser"
 	"go/token"
 	"go/types"
 	"io"
@@ -21,6 +23,41 @@ func component(pkgPath, name string) *arch.Component {
 	obj := types.NewTypeName(token.NoPos, pkg, name, nil)
 	typ := types.NewNamed(obj, types.NewStruct(nil, nil), nil)
 	return &arch.Component{Obj: obj, Type: typ, Comment: "Documentation <&>"}
+}
+
+func TestDotGenericConstraintLabel(t *testing.T) {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "example.go", `package example
+type Cache[T interface{ ~int | ~string }] struct{}
+`, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg, err := (&types.Config{}).Check("example", fset, []*ast.File{file}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	obj := pkg.Scope().Lookup("Cache")
+	world := arch.NewWorld()
+	world.Add(&arch.Component{Obj: obj, Type: obj.Type()})
+	for _, noColor := range []bool{false, true} {
+		t.Run(fmt.Sprint(noColor), func(t *testing.T) {
+			var out bytes.Buffer
+			if _, err := (&Dot{World: world, Options: Options{NoColor: noColor}}).WriteTo(&out); err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(out.String(), "shape=box") || !strings.Contains(out.String(), fmt.Sprintf("label=%q", obj.Type().String())) {
+				t.Fatalf("expected plain shape and complete type label:\n%s", &out)
+			}
+			if dot, err := exec.LookPath("dot"); err == nil {
+				cmd := exec.Command(dot, "-Tsvg")
+				cmd.Stdin = &out
+				if result, err := cmd.CombinedOutput(); err != nil {
+					t.Fatalf("Graphviz rejected generic label: %v\n%s", err, result)
+				}
+			}
+		})
+	}
 }
 
 func TestDotBasicPreservesNodes(t *testing.T) {
